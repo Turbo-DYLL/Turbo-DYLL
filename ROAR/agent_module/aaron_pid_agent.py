@@ -22,6 +22,8 @@ class PIDFastAgent(Agent):
 
         self.behavior_planner = BehaviorPlanner(agent=self)
         self.local_planner = SimpleWaypointFollowingLocalPlanner(
+            spawn_point_id=self.agent_settings.spawn_point_id,
+
             agent=self,
             controller=self.pid_controller,
             mission_planner=self.mission_planner,

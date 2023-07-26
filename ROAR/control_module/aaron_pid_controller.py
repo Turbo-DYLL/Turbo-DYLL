@@ -54,8 +54,9 @@ class PIDFastController(Controller):
 
         # run lat pid controller
         steering, error, wide_error, sharp_error = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint, close_waypoint=close_waypoint, far_waypoint=far_waypoint)
-        
-        
+
+        print(next_waypoint)
+
         current_speed = Vehicle.get_speed(self.agent.vehicle)
         
         # get errors from lat pid

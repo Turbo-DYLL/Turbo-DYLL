@@ -68,15 +68,15 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         # set waypoint queue to current spawn location
         # 1. find closest waypoint
         # 2. remove all waypoints prior to closest waypoint
-        if self.spawn_point_id != 12:
-            closest_waypoint = self.way_points_queue[0]
-            for waypoint in self.way_points_queue:
-                cur_dist = self.agent.vehicle.transform.location.distance(waypoint.location)
-                closest_dist = self.agent.vehicle.transform.location.distance(closest_waypoint.location)
-                if  cur_dist < closest_dist:
-                    closest_waypoint = waypoint
-            while self.way_points_queue[0] != closest_waypoint:
-                self.way_points_queue.popleft()
+        # if self.spawn_point_id != 12:
+        #     closest_waypoint = self.way_points_queue[0]
+        #     for waypoint in self.way_points_queue:
+        #         cur_dist = self.agent.vehicle.transform.location.distance(waypoint.location)
+        #         closest_dist = self.agent.vehicle.transform.location.distance(closest_waypoint.location)
+        #         if  cur_dist < closest_dist:
+        #             closest_waypoint = waypoint
+        #     while self.way_points_queue[0] != closest_waypoint:
+        #         self.way_points_queue.popleft()
 
 
     def is_done(self) -> bool:
@@ -89,7 +89,7 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         """
         return len(self.way_points_queue) == 0
 
-    def run_in_series(self, most_recent_checkpoint) -> VehicleControl:
+    def run_in_series(self) -> VehicleControl:
         """
         Run step for the local planner
         Procedure:
@@ -148,7 +148,7 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         far_waypoint = self.way_points_queue[min(waypoint_lookahead, len(self.way_points_queue) - 1)]
         close_waypoint = self.way_points_queue[min(120, waypoint_lookahead, len(self.way_points_queue) - 1)]
         
-        control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint, close_waypoint=close_waypoint, most_recent_checkpoint=most_recent_checkpoint, far_waypoint=far_waypoint)
+        control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint, close_waypoint=close_waypoint, far_waypoint=far_waypoint)
         # self.logger.debug(f"\n"
         #                   f"Curr Transform: {self.agent.vehicle.transform}\n"
         #                   f"Target Location: {target_waypoint.location}\n"
