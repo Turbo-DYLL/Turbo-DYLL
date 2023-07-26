@@ -10,8 +10,8 @@ from typing import Tuple
 from prettytable import PrettyTable
 from ROAR.agent_module.michael_pid_agent import PIDAgent
 
-# my import
-from ROAR.agent_module.pid_fast_agent import PIDFastAgent
+# aaron import
+from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
 
 
 def compute_score(carla_runner: CarlaRunner) -> Tuple[float, int, int]:

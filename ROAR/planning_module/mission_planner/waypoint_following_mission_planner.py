@@ -69,6 +69,7 @@ class WaypointFollowingMissionPlanner(MissionPlanner):
             List of waypoints in format of [x, y, z]
         """
         result = []
+    
         with open(self.file_path.as_posix(), "r") as f:
             for line in f:
                 result.append(self._read_line(line=line))
