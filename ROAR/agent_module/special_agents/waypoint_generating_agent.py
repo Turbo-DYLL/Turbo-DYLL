@@ -14,6 +14,7 @@ class WaypointGeneratingAgent(Agent):
         # User input for start and end
         self.start_checkpoint = 1
         # agent_settings.spawn_point_id
+        self.last_waypoint = None
         self.end_checkpoint = int(input("What checkpoint are you ending at? "))
         # Output path
         self.output_file_path: Path = self.output_folder_path / (str(self.end_checkpoint - 1) + ".txt")
@@ -38,7 +39,7 @@ class WaypointGeneratingAgent(Agent):
 
     def call_in_carla_runner_to_return_time(self):
         return self.return_time
-
+    
     def get_diff_in_times(self):
         times_list_diffs = []
         for i in range(len(self.times_list) - 1):
@@ -50,7 +51,6 @@ class WaypointGeneratingAgent(Agent):
                  vehicle: Vehicle) -> VehicleControl:
         super(WaypointGeneratingAgent, self).run_step(sensors_data=sensors_data,
                                                      vehicle=vehicle)
-        
         # Showing minimap
         # Showing live minimap
         car_coords = [float(i) for i in self.vehicle.transform.record().split(",")]
@@ -93,7 +93,17 @@ class WaypointGeneratingAgent(Agent):
             self.start_recording = True
 
         # Logging
-        if self.time_counter > 1 and self.start_recording == True:
+        if self.time_counter > 1 or self.start_recording == True:
             #print(f"Writing to [{self.output_file_path}]: {self.vehicle.transform}")
-            self.output_file.write(self.vehicle.transform.record() + "\n")
+            if self.last_waypoint == None:
+                self.last_waypoint = self.vehicle.transform
+                if self.vehicle.transform.location.x != 0:
+                    self.output_file.write(self.vehicle.transform.record() + "\n")
+                print('run_step')
+            else:
+                distance = self.vehicle.transform.location.distance(self.last_waypoint.location)
+                if distance >= 1:
+                    self.output_file.write(self.vehicle.transform.record() + "\n")
+                    self.last_waypoint = self.vehicle.transform
+
         return VehicleControl()
