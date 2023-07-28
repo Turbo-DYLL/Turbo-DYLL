@@ -7,19 +7,25 @@ from ROAR.configurations.configuration import Configuration as AgentConfig
 import argparse
 from misc.utils import str2bool
 import carla
-
-
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
 
-def get_coordinates_from_last_line(file_path):
-    file = open(file_path, 'r')
-    lines = file.readlines()
-    file.close()
-    last_line = lines[-1].strip()
-    coordinates = last_line.split(',')[:3]
-    x, y, z = map(float, coordinates)
 
-    return x, y, z
+def get_coordinates_from_last_line(file_path):
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+    if len(lines) == 0:
+        return None
+    overwrite = input("Do you want to overwrite waypoints? [Y/n]").upper() == "Y"
+    if overwrite:
+        with open(file_path, "w") as file:
+            file.write("")
+        return None
+    last_line = lines[-1].strip()
+    coordinates = last_line.split(',')
+    x, y, z, roll, pitch, yaw = map(float, coordinates)
+    # TODO: fix this, when uncommented, it will cause the car to spawn in the air
+    return carla.Transform(carla.Location(x=x, y=z, z=y)) # , carla.Rotation(roll=roll, pitch=yaw, yaw=pitch))
+
 
 def main(args):
     """Starts game loop"""
@@ -30,32 +36,27 @@ def main(args):
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
     try:
+        spawn_point = get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
         my_vehicle = carla_runner.set_carla_world()
-        # agent = ForwardOnlyAgent(vehicle=my_vehicle,
-                         # agent_settings=agent_config)
-        x1,y1,z1 = get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
-        print(f'x1: {x1} y1: {y1} z1: {z1}')
         agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
-    
-        carla_runner.world.player.set_location(carla.Location(x=x1,z=y1,y=z1))
+        print("spawn_point: ", spawn_point)
+        if spawn_point:
+            carla_runner.world.player.set_transform(spawn_point)
         carla_runner.start_game_loop(agent=agent,
                                      use_manual_control=not args.auto)
-        
+        # carla_runner.on_finish()
         ans = input("Do you want to save waypoints to main.txt? [Y/n]")
-        if ans == "Y" or ans == "y":
+        if ans.upper() == "Y":
             print("waypoint saved")
             with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
                 file.writelines(agent.waypoints_list)
         else:
             print("waypoint discarded")
-
-            
-        print("LoopComplete")
-
     except Exception as e:
         logging.error(f"Something bad happened during initialization: {e}")
         carla_runner.on_finish()
         logging.error(f"{e}. Might be a good idea to restart Server")
+        raise e
 
 
 if __name__ == "__main__":
@@ -68,7 +69,7 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore", module="carla")
     parser = argparse.ArgumentParser()
-                                                # Manual control param
+    # Manual control param
     parser.add_argument("--auto", type=str2bool, default=False, help="True to use auto control")
 
     warnings.filterwarnings("ignore", module="carla")
