@@ -1,12 +1,15 @@
 import logging
 from pathlib import Path
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
-from ROAR_Sim.carla_client.carla_runner import CarlaRunner
+
 from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 import argparse
 from misc.utils import str2bool
 import carla
+
+#modified
+from ROAR_Sim.carla_client.segment_carla_runner import CarlaRunner #custom CarlaRunner
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
 
 
@@ -35,28 +38,33 @@ def main(args):
     carla_runner = CarlaRunner(carla_settings=carla_config,
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
-    try:
-        spawn_point = get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
-        my_vehicle = carla_runner.set_carla_world()
-        agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
-        print("spawn_point: ", spawn_point)
-        if spawn_point:
-            carla_runner.world.player.set_transform(spawn_point)
-        carla_runner.start_game_loop(agent=agent,
-                                     use_manual_control=not args.auto)
-        # carla_runner.on_finish()
-        ans = input("Do you want to save waypoints to main.txt? [Y/n]")
-        if ans.upper() == "Y":
-            print("waypoint saved")
-            with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
-                file.writelines(agent.waypoints_list)
-        else:
-            print("waypoint discarded")
-    except Exception as e:
-        logging.error(f"Something bad happened during initialization: {e}")
-        carla_runner.on_finish()
-        logging.error(f"{e}. Might be a good idea to restart Server")
-        raise e
+    while not carla_runner.terminate:
+    
+
+        try:
+            
+            spawn_point = get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
+            my_vehicle = carla_runner.set_carla_world()
+            agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
+            print("spawn_point: ", spawn_point)
+            if spawn_point:
+                carla_runner.world.player.set_transform(spawn_point)
+            carla_runner.start_game_loop(agent=agent,
+                                        use_manual_control=not args.auto)
+            # carla_runner.on_finish()
+            ans = input("Do you want to save waypoints to main.txt? [Y/n]")
+            if ans.upper() == "Y":
+                print("waypoint saved")
+                with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
+                    file.writelines(agent.waypoints_list)
+            else:
+                print("waypoint discarded")
+        except Exception as e:
+            logging.error(f"Something bad happened during initialization: {e}")
+            carla_runner.on_finish()
+            logging.error(f"{e}. Might be a good idea to restart Server")
+            raise e
+
 
 
 if __name__ == "__main__":
