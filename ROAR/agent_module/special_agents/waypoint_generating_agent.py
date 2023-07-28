@@ -15,7 +15,6 @@ class WaypointGeneratingAgent(Agent):
         self.start_checkpoint = 1
         # agent_settings.spawn_point_id
         self.end_checkpoint = int(input("What checkpoint are you ending at? "))
-
         # Output path
         self.output_file_path: Path = self.output_folder_path / (str(self.end_checkpoint - 1) + ".txt")
         if self.output_folder_path.exists() is False:
