@@ -11,6 +11,7 @@ import carla
 #modified
 from ROAR_Sim.carla_client.segment_carla_runner import CarlaRunner #custom CarlaRunner
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
+from button_detector import  button_click_detector
 
 
 def get_coordinates_from_last_line(file_path):
