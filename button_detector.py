@@ -61,7 +61,7 @@ class button_click_detector:
 
 
 #test code
-test =  button_click_detector()
-test.create_buttons()
+# test =  button_click_detector()
+# test.create_buttons()
 
-print("The result is:", test.button_clicked)
+# print("The result is:", test.button_clicked)

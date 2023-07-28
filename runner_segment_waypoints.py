@@ -19,11 +19,11 @@ def get_coordinates_from_last_line(file_path):
         lines = file.readlines()
     if len(lines) == 0:
         return None
-    overwrite = input("Do you want to overwrite waypoints? [Y/n]").upper() == "Y"
-    if overwrite:
-        with open(file_path, "w") as file:
-            file.write("")
-        return None
+    # overwrite = input("Do you want to overwrite all previoud waypoints? [Y/n]").upper() == "Y"
+    # if overwrite:
+    #     with open(file_path, "w") as file:
+    #         file.write("")
+    #     return None
     last_line = lines[-1].strip()
     coordinates = last_line.split(',')
     x, y, z, roll, pitch, yaw = map(float, coordinates)
@@ -39,11 +39,11 @@ def main(args):
     carla_runner = CarlaRunner(carla_settings=carla_config,
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
+    
     while not carla_runner.terminate:
     
 
         try:
-            
             spawn_point = get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
@@ -52,14 +52,18 @@ def main(args):
                 carla_runner.world.player.set_transform(spawn_point)
             carla_runner.start_game_loop(agent=agent,
                                         use_manual_control=not args.auto)
+            
             # carla_runner.on_finish()
-            ans = input("Do you want to save waypoints to main.txt? [Y/n]")
-            if ans.upper() == "Y":
+            # ans = input("Do you want to save waypoints to main.txt? [Y/n]")
+            button =  button_click_detector()
+            button.create_buttons()
+            if button.button_clicked == 1:
                 print("waypoint saved")
                 with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
                     file.writelines(agent.waypoints_list)
             else:
                 print("waypoint discarded")
+                
         except Exception as e:
             logging.error(f"Something bad happened during initialization: {e}")
             carla_runner.on_finish()
