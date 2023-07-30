@@ -39,21 +39,25 @@ def main(args):
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
             print("spawn_point: ", spawn_point)
+            #TODO fix the bug where if u copy in a coord the next line that it prints does not start with a \n 
             if spawn_point:
                 carla_runner.world.player.set_transform(spawn_point)
             carla_runner.start_game_loop(agent=agent,
                                         use_manual_control=not args.auto)
             
-            # carla_runner.on_finish()
-            # ans = input("Do you want to save waypoints to main.txt? [Y/n]")
-            choice = interactive_map_viewer.interactive_map(util.get_coords_from_array(agent.waypoints_list[-1]))
+            with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "r") as file:
+                interactive_map_viewer.update(file.read(), agent.waypoints_list)
+                file.close()
+            choice = interactive_map_viewer.interactive_map(util.get_coords_from_str(agent.waypoints_list[-1]))
             print(agent.waypoints_list[-1])
             if choice == 0:
                 print("waypoint saved")
                 with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
                     file.writelines(agent.waypoints_list)
+                file.close()
             else:
                 print("waypoint discarded")
+            
                 
         except Exception as e:
             logging.error(f"Something bad happened during initialization: {e}")

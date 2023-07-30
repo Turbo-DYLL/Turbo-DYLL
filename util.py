@@ -1,7 +1,7 @@
 import carla
 
 
-def get_coords_from_array(a):
+def get_coords_from_str(a):
     a = a.split(',')
     x, y, z, roll, pitch, yaw = map(float, a)
     return [x,z]
@@ -14,6 +14,32 @@ def convert_rotation_from_agent_to_source_real(roll, pitch, yaw) -> carla.Rotati
         yaw = yaw - 90
     return carla.Rotation(roll=roll, pitch=pitch, yaw=yaw)
 
+def extract_xy_coords_from_string(coord_string):
+    lines = coord_string.strip().split('\n')
+    xy_coords_list = []
+    
+    for line in lines:
+        coords = line.split(',')
+        x_coord = float(coords[0].strip())
+        y_coord = float(coords[2].strip())
+        x_coord = int(x_coord)
+        y_coord = int(y_coord)
+        xy_coords_list.append([x_coord, y_coord])
+    
+    return xy_coords_list
+
+def extract_xy_coords_from_array(coord_array):
+    xy_coords_list = []
+    
+    for line in coord_array:
+        coords = line.split(',')
+        x_coord = float(coords[0])
+        y_coord = float(coords[2])
+        x_coord = int(x_coord)
+        y_coord = int(y_coord)
+        xy_coords_list.append([x_coord, y_coord])
+    
+    return xy_coords_list
 
 def get_coordinates_from_last_line(file_path):
     with open(file_path, "r") as file:
