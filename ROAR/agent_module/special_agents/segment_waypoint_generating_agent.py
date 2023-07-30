@@ -12,16 +12,17 @@ class WaypointGeneratingAgent(Agent):
         self.last_waypoint = None
         self.output_file_path: Path = self.output_folder_path / "easy_map_waypoints.txt"
         self.waypoints_list = []
-        self.is_init = False
 
     def run_step(self, sensors_data: SensorsData,
                  vehicle: Vehicle) -> VehicleControl:
         super(WaypointGeneratingAgent, self).run_step(sensors_data=sensors_data, vehicle=vehicle)
         if self.time_counter > 1:
-            if not self.is_init:
-                self.is_init = True
-                self.waypoints_list.append(self.vehicle.transform.record() + "\n")
+            if not self.last_waypoint:
+                location = self.vehicle.transform.location
+                if location.x == 0 and location.y == 0 and location.z == 0:
+                    return VehicleControl()
                 self.last_waypoint = self.vehicle.transform
+                self.waypoints_list.append(self.vehicle.transform.record() + "\n")
             distance = self.vehicle.transform.location.distance(self.last_waypoint.location)
             if distance >= 1:
                 self.waypoints_list.append(self.vehicle.transform.record() + "\n")
