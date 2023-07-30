@@ -38,9 +38,9 @@ class MapViewer:
 
             #Calculates zoomed_map
             x_start = max(int(car_coords[0]) - int(self.window_size * 4 / 3), 0) # *4/3 is to adjust for the change in dimension later
-            x_end = min(car_coords[0] + int(self.window_size * 4/3), self.main_map.shape[1])
-            y_start = max(car_coords[1] - self.window_size, 0)
-            y_end = min(car_coords[1] + self.window_size, self.main_map.shape[0])      
+            x_end = min(int(car_coords[0]) + int(self.window_size * 4/3), self.main_map.shape[1])
+            y_start = max(int(car_coords[1]) - self.window_size, 0)
+            y_end = min(int(car_coords[1]) + self.window_size, self.main_map.shape[0])      
             zoomed_map = self.main_map[y_start:y_end, x_start:x_end]
 
             #Resize zoomed map to dim
@@ -87,9 +87,11 @@ class MapViewer:
                 car_coords[1]-=20
             #Save
             if key == ord('p'):
+                cv2.destroyAllWindows()
                 return 0
             #Discard
             if key == ord('l'):
+                cv2.destroyAllWindows()
                 return 1
 
 
