@@ -13,7 +13,7 @@ class MapViewer:
         file_path = Path("./ROAR/datasets/birds_eye_map.npy")
         self.main_map = np.load(file_path)
 
-    def after_run_map(self, car_coords=[3000,3000]):
+    def interactive_map(self, car_coords=[3000,3000]):
 
 
 
@@ -42,15 +42,13 @@ class MapViewer:
             zoomed_map_color[:, :, 1] = zoomed_map  # Green channel (Channel 1)
             zoomed_map_color[:, :, 2] = zoomed_map  # Red channel (Channel 2)
 
-
-
-            
-
             #Creates Discription canva
             description_canvas = np.zeros((800, 3200, 3), dtype=np.uint8)
 
             #putText()
-            cv2.putText(description_canvas, "use AWSD to move around", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 0), 2)
+            cv2.putText(description_canvas, "use AWSD to move around", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 0), 3)
+            cv2.putText(description_canvas, "Press 'P' to save  Press 'L' to discard", (100, 400), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 0), 3)
+            cv2.putText(description_canvas, "Have fun testing - Leo", (2000, 600), cv2.FONT_HERSHEY_SIMPLEX, 3, (191, 64, 191), 3)
             #Resizes Description canva
             description_canvas = cv2.resize(description_canvas, text_dim, interpolation=cv2.INTER_AREA)
            
@@ -61,6 +59,7 @@ class MapViewer:
 
             cv2.imshow("map", combined_image )
             
+            # Used to move the map
             key = cv2.waitKey(1)
             if key == ord('a'):
                 car_coords[0]-=5
@@ -70,8 +69,12 @@ class MapViewer:
                 car_coords[0]+=5
             if key == ord('w'):
                 car_coords[1]-=5
+            #Save
             if key == ord('p'):
-                break
+                return 0
+            #Discard
+            if key == ord('l'):
+                return 1
 
 
         
@@ -84,7 +87,7 @@ map_viewer = MapViewer(window_size=200)
     
 
 
-map_viewer.show_map([3000,3000])
+map_viewer.interactive_map([3000,3000])
 
 
 
