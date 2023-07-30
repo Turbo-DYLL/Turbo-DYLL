@@ -28,7 +28,16 @@ def get_coordinates_from_last_line(file_path):
     coordinates = last_line.split(',')
     x, y, z, roll, pitch, yaw = map(float, coordinates)
     # TODO: fix this, when uncommented, it will cause the car to spawn in the air
-    return carla.Transform(carla.Location(x=x, y=z, z=y)) # , carla.Rotation(roll=roll, pitch=yaw, yaw=pitch))
+    return carla.Transform(carla.Location(x=x, y=z, z=y), convert_rotation_from_agent_to_source_real(roll, pitch, yaw))
+
+
+def convert_rotation_from_agent_to_source_real(roll, pitch, yaw) -> carla.Rotation:
+    roll, pitch, yaw = roll, pitch, -yaw
+    if yaw <= 0:
+        yaw = yaw + 270
+    else:
+        yaw = yaw - 90
+    return carla.Rotation(roll=roll, pitch=pitch, yaw=yaw)
 
 
 def main(args):
