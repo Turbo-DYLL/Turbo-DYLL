@@ -23,17 +23,19 @@ def main(args):
                                npc_agent_class=PurePursuitAgent)
     interactive_map_viewer = MapViewer()
     waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/main.txt")
-    with open(waypoints_file, "r") as file:
-        lines = file.readlines()
-    spawn_point = None
-    try:
-        spawn_point = util.convert_transform_from_str_to_source(lines[-1])
-    except Exception:
-        pass
+
     while True:
         try:
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
+
+            with open(waypoints_file, "r") as file:
+                lines = file.readlines()
+            spawn_point = None
+            try:
+                spawn_point = util.convert_transform_from_str_to_source(lines[-1])
+            except Exception:
+                pass
             print("spawn_point: ", spawn_point)
             #TODO fix the bug where if u copy in a coord the next line that it prints does not start with a \n 
             if spawn_point:
