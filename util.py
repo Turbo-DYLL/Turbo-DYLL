@@ -14,8 +14,7 @@ def convert_rotation_from_agent_to_source_real(roll, pitch, yaw) -> carla.Rotati
         yaw = yaw - 90
     return carla.Rotation(roll=roll, pitch=pitch, yaw=yaw)
 
-def extract_xy_coords_from_string(coord_string):
-    lines = coord_string.strip().split('\n')
+def extract_xy_coords_from_string_lines(lines):
     xy_coords_list = []
     
     for line in lines:
