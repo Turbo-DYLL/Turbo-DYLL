@@ -31,13 +31,13 @@ class MapViewer:
         self.main_map = np.stack((self.main_map,) * 3, axis=-1) #converts it in to colored
 
         try:
-            set_waypoint_array = util.extract_xy_coords_from_string_lines(set_waypoint)
+            set_waypoint_array = util.get_coords_from_str_lines(set_waypoint)
             for coords in set_waypoint_array:
                 self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 36, 250) #<- blue lol
         except ValueError:
             pass
 
-        current_waypoint_array = util.extract_xy_coords_from_array(current_waypoint)
+        current_waypoint_array = util.get_coords_from_str_lines(current_waypoint)
         for coords in current_waypoint_array:
             self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 250, 48) #<- green haha
         # why the hell did bug fixxing this small section take me 2 hours - Leo 

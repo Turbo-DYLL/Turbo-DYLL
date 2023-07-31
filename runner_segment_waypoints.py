@@ -6,7 +6,6 @@ from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 import argparse
 from misc.utils import str2bool
-import carla
 
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
@@ -24,9 +23,15 @@ def main(args):
                                npc_agent_class=PurePursuitAgent)
     interactive_map_viewer = MapViewer()
     waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/main.txt")
+    with open(waypoints_file, "r") as file:
+        lines = file.readlines()
+    spawn_point = None
+    try:
+        spawn_point = util.convert_transform_from_str_to_source(lines[-1])
+    except Exception:
+        pass
     while True:
         try:
-            spawn_point = util.get_coordinates_from_last_line(waypoints_file)
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
             print("spawn_point: ", spawn_point)

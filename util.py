@@ -1,22 +1,19 @@
 import carla
 
 
+def convert_transform_from_str_to_list(str_transform: str):
+    coordinates = str_transform.split(",")
+    return [float(i.strip()) for i in coordinates]
+
+
 def get_coords_from_str(a):
-    a = a.split(',')
-    x, y, z, roll, pitch, yaw = map(float, a)
-    return [x,z]
+    transform = convert_transform_from_str_to_list(a)
+    return [transform[0], transform[2]]
 
-def convert_rotation_from_agent_to_source_real(roll, pitch, yaw) -> carla.Rotation:
-    roll, pitch, yaw = roll, pitch, -yaw
-    if yaw <= 0:
-        yaw = yaw + 270
-    else:
-        yaw = yaw - 90
-    return carla.Rotation(roll=roll, pitch=pitch, yaw=yaw)
 
-def extract_xy_coords_from_string_lines(lines):
+def get_coords_from_str_lines(lines):
     xy_coords_list = []
-    
+
     for line in lines:
         coords = line.split(',')
         x_coord = float(coords[0].strip())
@@ -24,34 +21,24 @@ def extract_xy_coords_from_string_lines(lines):
         x_coord = int(x_coord)
         y_coord = int(y_coord)
         xy_coords_list.append([x_coord, y_coord])
-    
+
     return xy_coords_list
 
-def extract_xy_coords_from_array(coord_array):
-    xy_coords_list = []
-    
-    for line in coord_array:
-        coords = line.split(',')
-        x_coord = float(coords[0])
-        y_coord = float(coords[2])
-        x_coord = int(x_coord)
-        y_coord = int(y_coord)
-        xy_coords_list.append([x_coord, y_coord])
-    
-    return xy_coords_list
 
-def get_coordinates_from_last_line(file_path):
-    with open(file_path, "r") as file:
-        lines = file.readlines()
-    if len(lines) == 0:
-        return None
-    # overwrite = input("Do you want to overwrite all previoud waypoints? [Y/n]").upper() == "Y"
-    # if overwrite:
-    #     with open(file_path, "w") as file:
-    #         file.write("")
-    #     return None
-    last_line = lines[-1].strip()
-    coordinates = last_line.split(',')
-    x, y, z, roll, pitch, yaw = map(float, coordinates)
-    # TODO: fix this, when uncommented, it will cause the car to spawn in the air
-    return carla.Transform(carla.Location(x=x, y=z, z=y), convert_rotation_from_agent_to_source_real(roll, pitch, yaw))
+def convert_rotation_from_agent_to_source(roll, pitch, yaw) -> carla.Rotation:
+    roll, pitch, yaw = roll, pitch, -yaw
+    if yaw <= 0:
+        yaw = yaw + 270
+    else:
+        yaw = yaw - 90
+    return carla.Rotation(roll=roll, pitch=pitch, yaw=yaw)
+
+
+def convert_location_from_agent_to_source(x, y, z) -> carla.Location:
+    return carla.Location(x=x, y=z, z=y)
+
+
+def convert_transform_from_str_to_source(line):
+    x, y, z, roll, pitch, yaw = convert_transform_from_str_to_list(line)
+    return carla.Transform(convert_location_from_agent_to_source(x, y, z),
+                           convert_rotation_from_agent_to_source(roll, pitch, yaw))
