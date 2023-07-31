@@ -23,9 +23,10 @@ def main(args):
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
     interactive_map_viewer = MapViewer()
+    waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/main.txt")
     while True:
         try:
-            spawn_point = util.get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
+            spawn_point = util.get_coordinates_from_last_line(waypoints_file)
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
             print("spawn_point: ", spawn_point)
@@ -40,7 +41,7 @@ def main(args):
             logging.error(f"{e}. Might be a good idea to restart Server")
             raise e
 
-        with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "r") as file:
+        with open(waypoints_file, "r") as file:
             waypoints = file.readlines()
 
         interactive_map_viewer.update(waypoints, agent.waypoints_list)
@@ -50,7 +51,7 @@ def main(args):
         print(f"last waypoint: {agent.waypoints_list[-1]}")
 
         if choice % 2 == 0:
-            with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
+            with open(waypoints_file, "a") as file:
                 file.writelines(agent.waypoints_list)
             print("waypoint saved")
         else:
