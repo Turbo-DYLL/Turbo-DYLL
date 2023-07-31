@@ -27,7 +27,7 @@ class MapViewer:
 
 
             # print(f"Mouse wheel scrolled: {scroll_amount}")
-    def update(self, set_waypoint :list = None, current_waypoint :list = None):
+    def update(self, set_waypoint = None, current_waypoint = None):
         """updates map with waypoint """
         self.main_map = np.load(self.file_path)
         self.main_map = self.main_map.astype(np.uint8)
