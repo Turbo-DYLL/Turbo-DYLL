@@ -142,9 +142,13 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         if keyboard.is_pressed("l"):
             print(vehicle_transform.location)
         '''
-        waypoint_lookahead = round(pow(current_speed, 2) * 0.002 + 0.7 * current_speed)
+        waypoint_lookahead = round((pow(current_speed, 2) * 0.002 + 0.6 * current_speed) / 2)
         far_waypoint = self.way_points_queue[min(waypoint_lookahead, len(self.way_points_queue) - 1)]
         close_waypoint = self.way_points_queue[min(60, waypoint_lookahead, len(self.way_points_queue) - 1)]
+        print(f"close: {close_waypoint}")
+        print(f"far: {far_waypoint}")
+        print(f"target: {target_waypoint}")
+        print(f"ahead: {waypoint_lookahead}")
 
         control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint,
                                                                 close_waypoint=close_waypoint,

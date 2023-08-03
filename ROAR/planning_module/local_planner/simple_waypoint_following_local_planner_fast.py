@@ -147,6 +147,10 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         waypoint_lookahead = round(pow(current_speed, 2)*0.002 + 0.7*current_speed)
         far_waypoint = self.way_points_queue[min(waypoint_lookahead, len(self.way_points_queue) - 1)]
         close_waypoint = self.way_points_queue[min(120, waypoint_lookahead, len(self.way_points_queue) - 1)]
+        print(f"Close Waypoint: {close_waypoint}")
+        print(f"Far Waypoint: {far_waypoint}")
+        print(f"Target Waypoint: {target_waypoint}")
+        print(waypoint_lookahead)
         
         control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint, close_waypoint=close_waypoint, far_waypoint=far_waypoint)
         # self.logger.debug(f"\n"

@@ -24,7 +24,11 @@ class TurboPIDController(Controller):
         self.brake_counter = 0
 
         self.waypoint_queue_region = []
-        with open(Path("./ROAR/datasets/control/region_list.txt")) as f:
+        # region_list_path = Path("./ROAR/control_module/region_list.txt")
+        region_list_path = Path("./ROAR/datasets/control/region_list.txt")
+        # braking_list_path = Path("./ROAR/control_module/braking_list_mod.txt")
+        braking_list_path = Path("./ROAR/datasets/control/braking_list.txt")
+        with open(region_list_path) as f:
             for line in f:
                 raw = line.split(",")
                 waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
@@ -32,7 +36,7 @@ class TurboPIDController(Controller):
                 self.waypoint_queue_region.append(waypoint)
 
         self.waypoint_queue_braking = []
-        with open(Path("./ROAR/datasets/control/braking_list.txt")) as f:
+        with open(braking_list_path) as f:
             for line in f:
                 raw = line.split(",")
                 waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
@@ -45,6 +49,7 @@ class TurboPIDController(Controller):
             steering_boundary=steering_boundary
         )
         self.logger = logging.getLogger(__name__)
+        self.location = Location.from_array([2107.3212890625,117.31633758544922,3417.138671875])
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
@@ -67,8 +72,13 @@ class TurboPIDController(Controller):
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
 
+        print(f"sharp: {sharp_error}, speed: {current_speed}")
         if self.region == 1:
-            if sharp_error < 0.68 or current_speed <= 90:
+            if self.agent.vehicle.transform.location.distance(self.location) <= 30:
+                print("slow down")
+                throttle = -1
+                brake = 1
+            elif sharp_error < 0.9 or current_speed <= 90:
                 throttle = 1
                 brake = 0
             else:
@@ -85,7 +95,7 @@ class TurboPIDController(Controller):
                 throttle = -1
                 brake = 1
                 self.brake_counter += 1
-                if self.brake_counter >= 4:
+                if self.brake_counter >= 8:
                     self.brake_counter = 0
             elif sharp_error >= 0.67 and current_speed > 70:
                 throttle = 0
@@ -96,13 +106,6 @@ class TurboPIDController(Controller):
             else:
                 throttle = 1
                 brake = 0
-        elif self.region == 3:
-            if sharp_error < 0.68 or current_speed <= 90:
-                throttle = 1
-                brake = 0
-            else:
-                throttle = -1
-                brake = 1
 
         gear = max(1, int((current_speed - 2 * pitch) / 60))
         if throttle == -1:
