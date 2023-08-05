@@ -62,7 +62,7 @@ def prep_map_visualization(map_path, checkpoints_path):
     """Prepares a map to be visualized"""
     # Loading in the data
     data = np.load(map_path)
-
+    
     # Modifying the image to include checkpoints
     checkpoints_file = open(checkpoints_path, newline="")
     checkpoints_reader = csv.reader(checkpoints_file)

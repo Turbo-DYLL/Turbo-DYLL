@@ -8,7 +8,7 @@ from ROAR.agent_module.pure_pursuit_agent \
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from typing import Tuple
 from prettytable import PrettyTable
-from ROAR.agent_module.michael_pid_agent import PIDAgent
+from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 
 # aaron import
 from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
@@ -81,7 +81,7 @@ def suppress_warnings():
 
 def main():
     suppress_warnings()
-    agent_class = PIDFastAgent
+    agent_class = TurboPIDAgent
     num_trials = 1
     total_score_array = []
     num_laps = 1
