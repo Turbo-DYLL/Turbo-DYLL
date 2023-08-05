@@ -1,11 +1,10 @@
-from distutils.spawn import spawn
 from ROAR.planning_module.local_planner.local_planner import LocalPlanner
 from ROAR.utilities_module.data_structures_models import Transform
 from ROAR.utilities_module.vehicle_models import Vehicle, VehicleControl
 from ROAR.control_module.controller import Controller
 from ROAR.planning_module.mission_planner.mission_planner import MissionPlanner
 from ROAR.planning_module.behavior_planner.behavior_planner import BehaviorPlanner
-import keyboard
+
 
 import logging
 from typing import Union
@@ -17,7 +16,7 @@ import json
 from pathlib import Path
 
 
-class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
+class TurboWaypointFollowingLocalPlanner(LocalPlanner):
     def __init__(
             self,
             spawn_point_id: int,
@@ -77,7 +76,6 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         #             closest_waypoint = waypoint
         #     while self.way_points_queue[0] != closest_waypoint:
         #         self.way_points_queue.popleft()
-
 
     def is_done(self) -> bool:
         """
@@ -144,15 +142,17 @@ class SimpleWaypointFollowingLocalPlanner(LocalPlanner):
         if keyboard.is_pressed("l"):
             print(vehicle_transform.location)
         '''
-        waypoint_lookahead = round(pow(current_speed, 2)*0.002 + 0.7*current_speed)
+        waypoint_lookahead = round((pow(current_speed, 2) * 0.002 + 0.6 * current_speed) / 2)
         far_waypoint = self.way_points_queue[min(waypoint_lookahead, len(self.way_points_queue) - 1)]
-        close_waypoint = self.way_points_queue[min(120, waypoint_lookahead, len(self.way_points_queue) - 1)]
-        print(f"Close Waypoint: {close_waypoint}")
-        print(f"Far Waypoint: {far_waypoint}")
-        print(f"Target Waypoint: {target_waypoint}")
-        print(waypoint_lookahead)
-        
-        control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint, close_waypoint=close_waypoint, far_waypoint=far_waypoint)
+        close_waypoint = self.way_points_queue[min(60, waypoint_lookahead, len(self.way_points_queue) - 1)]
+        print(f"close: {close_waypoint}")
+        print(f"far: {far_waypoint}")
+        print(f"target: {target_waypoint}")
+        print(f"ahead: {waypoint_lookahead}")
+
+        control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint,
+                                                                close_waypoint=close_waypoint,
+                                                                far_waypoint=far_waypoint)
         # self.logger.debug(f"\n"
         #                   f"Curr Transform: {self.agent.vehicle.transform}\n"
         #                   f"Target Location: {target_waypoint.location}\n"

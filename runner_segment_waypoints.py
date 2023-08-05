@@ -6,20 +6,11 @@ from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 import argparse
 from misc.utils import str2bool
-import carla
 
-#modified
-from ROAR_Sim.carla_client.segment_carla_runner import CarlaRunner #custom CarlaRunner
+from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
 from opencv_map import MapViewer
 import util
-
-
-
-
-
-
-
 
 
 def main(args):
@@ -31,39 +22,51 @@ def main(args):
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
     interactive_map_viewer = MapViewer()
-    while not carla_runner.terminate:
-    
+    waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/main.txt")
 
+    while True:
         try:
-            spawn_point = util.get_coordinates_from_last_line(Path("./ROAR/datasets/segment_waypoint_test/main.txt"))
             my_vehicle = carla_runner.set_carla_world()
             agent = WaypointGeneratingAgent(vehicle=my_vehicle, agent_settings=agent_config)
+
+            with open(waypoints_file, "r") as file:
+                lines = file.readlines()
+            spawn_point = None
+            try:
+                spawn_point = util.convert_transform_from_str_to_source(lines[-1])
+            except Exception:
+                pass
             print("spawn_point: ", spawn_point)
             #TODO fix the bug where if u copy in a coord the next line that it prints does not start with a \n 
             if spawn_point:
                 carla_runner.world.player.set_transform(spawn_point)
             carla_runner.start_game_loop(agent=agent,
                                         use_manual_control=not args.auto)
-            
-            with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "r") as file:
-                interactive_map_viewer.update(file.read(), agent.waypoints_list)
-                file.close()
-            choice = interactive_map_viewer.interactive_map(util.get_coords_from_str(agent.waypoints_list[-1]))
-            print(agent.waypoints_list[-1])
-            if choice == 0:
-                print("waypoint saved")
-                with open(Path("./ROAR/datasets/segment_waypoint_test/main.txt"), "a") as file:
-                    file.writelines(agent.waypoints_list)
-                file.close()
-            else:
-                print("waypoint discarded")
-            
-                
         except Exception as e:
             logging.error(f"Something bad happened during initialization: {e}")
             carla_runner.on_finish()
             logging.error(f"{e}. Might be a good idea to restart Server")
             raise e
+
+        with open(waypoints_file, "r") as file:
+            waypoints = file.readlines()
+
+        interactive_map_viewer.update(waypoints, agent.waypoints_list)
+
+        # 0: save, 1: discard, 2: save&quit 3: discard&quit
+        choice = interactive_map_viewer.interactive_map(util.get_coords_from_str(agent.waypoints_list[-1]))
+        print(f"last waypoint: {agent.waypoints_list[-1]}")
+
+        if choice % 2 == 0:
+            with open(waypoints_file, "a") as file:
+                file.writelines(agent.waypoints_list)
+            print("waypoint saved")
+        else:
+            print("waypoint discarded")
+
+        if choice > 1:
+            print("quitting")
+            break
 
 
 

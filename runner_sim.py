@@ -8,9 +8,8 @@ import argparse
 from misc.utils import str2bool
 from ROAR.agent_module.forward_only_agent import ForwardOnlyAgent
 
-# my import
 
-from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
+from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 
 def main(args):
     """Starts game loop"""
@@ -27,23 +26,23 @@ def main(args):
     try:
         my_vehicle = carla_runner.set_carla_world()
         print(get_run_time(carla_runner))
-        agent = PIDFastAgent(vehicle=my_vehicle,
+        agent = TurboPIDAgent(vehicle=my_vehicle,
                          agent_settings=agent_config)
         carla_runner.start_game_loop(agent=agent,
                                      use_manual_control=not args.auto)
-        #carla_runner.agent_collision_counter
-
     except Exception as e:
         logging.error(f"Something bad happened during initialization: {e}")
         carla_runner.on_finish()
         logging.error(f"{e}. Might be a good idea to restart Server")
-
+        raise e
     finally:
         print("Time: " + str(carla_runner.end_simulation_time - carla_runner.start_simulation_time)) # based off time.time
+
 
 def get_run_time(carla_runner):
     # Gets the run time in the sim
     return carla_runner.world.carla_world.get_snapshot().elapsed_seconds
+
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s '
