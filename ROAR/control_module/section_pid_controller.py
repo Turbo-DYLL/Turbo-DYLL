@@ -8,6 +8,7 @@ from pathlib import Path
 from ROAR.control_module.controller import Controller
 from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
 from ROAR.utilities_module.data_structures_models import Transform, Location, Rotation
+from ROAR.utilities_module.pid_functions import *
 
 
 class TurboPIDController(Controller):
@@ -23,26 +24,6 @@ class TurboPIDController(Controller):
         self.region = 1
         self.brake_counter = 0
 
-        self.waypoint_queue_region = []
-        # region_list_path = Path("./ROAR/control_module/region_list.txt")
-        region_list_path = Path("./ROAR/datasets/control/region_list.txt")
-        # braking_list_path = Path("./ROAR/control_module/braking_list_mod.txt")
-        braking_list_path = Path("./ROAR/datasets/control/braking_list.txt")
-        with open(region_list_path) as f:
-            for line in f:
-                raw = line.split(",")
-                waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
-                                     rotation=Rotation(pitch=0, yaw=0, roll=0))
-                self.waypoint_queue_region.append(waypoint)
-
-        self.waypoint_queue_braking = []
-        with open(braking_list_path) as f:
-            for line in f:
-                raw = line.split(",")
-                waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
-                                     rotation=Rotation(pitch=0, yaw=0, roll=0))
-                self.waypoint_queue_braking.append(waypoint)
-
         self.lat_pid_controller = LatPIDController(
             agent=agent,
             config=self.config["latitudinal_controller"],
@@ -50,6 +31,18 @@ class TurboPIDController(Controller):
         )
         self.logger = logging.getLogger(__name__)
         self.location = Location.from_array([2107.3212890625,117.31633758544922,3417.138671875])
+
+
+
+        ## Sectional PID
+        self.current_waypoint = 0
+        self.section_id = 0
+        sectional_pid_path = Path("./ROAR/datasets/sectional_waypoint/text.txt")
+        with open(sectional_pid_path) as f:
+            self.sectional_pid_list = list(map(SectionalPID, f.split('///\n')))
+        
+        self.current_pid = self.sectional_pid_list[0]
+        self.last_pid = self.sectional_pid_list[0]
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
@@ -73,56 +66,42 @@ class TurboPIDController(Controller):
         pitch = float(next_waypoint.record().split(",")[4])
 
 
-
-
         print(f"sharp: {sharp_error}, speed: {current_speed}")
-        if self.region == 1:
-            if self.agent.vehicle.transform.location.distance(self.location) <= 30:
-                print("slow down")
-                throttle = -1
-                brake = 1
-            elif sharp_error < 0.9 or current_speed <= 90:
-                throttle = 1
-                brake = 0
-            else:
-                throttle = -1
-                brake = 1
-        elif self.region == 2:
-            waypoint = self.waypoint_queue_braking[0]  # 5012 is weird bump spot
-            dist = self.agent.vehicle.transform.location.distance(waypoint.location)
-            if dist <= 5:
-                self.brake_counter = 1
-                # print(self.waypoint_queue_braking[0])
-                self.waypoint_queue_braking.pop(0)
-            if self.brake_counter > 0:
-                throttle = -1
-                brake = 1
-                self.brake_counter += 1
-                if self.brake_counter >= 8:
-                    self.brake_counter = 0
-            elif sharp_error >= 0.67 and current_speed > 70:
-                throttle = 0
-                brake = 0.4
-            elif wide_error > 0.09 and current_speed > 92:  # wide turn
-                throttle = max(0, 1 - 6 * pow(wide_error + current_speed * 0.003, 6))
-                brake = 0
-            else:
-                throttle = 1
-                brake = 0
 
+        
+        self.current_waypoint += 1
+        # SectionalPid
+
+        #change to next sectional PID
+        next_pid_change = self.sectional_pid_list[self.section_id].array[0][0]
+        if self.current_waypoint == next_pid_change:
+            self.last_pid = self.current_pid
+            self.current_pid = self.sectional_pid_list[self.section_id]
+            self.sectional_id += 1
+
+
+
+        for index in range(5):
+            sub_pid = self.current_pid.array[index]
+            if sub_pid[-1] == 1:
+                if sharp_turn(sharp_error, current_speed, sub_pid[1], sub_pid[2],sub_pid[3],sub_pid[4]) != None:
+                    brake,throttle = sharp_turn(sharp_error, current_speed, sub_pid[1], sub_pid[2],sub_pid[3],sub_pid[4])
+            elif sub_pid[-1] == 2:
+                if wide_turn(sharp_error, current_speed, sub_pid[1], sub_pid[2],sub_pid[3],sub_pid[4]) != None:
+                    brake,throttle = wide_turn(sharp_error, current_speed, sub_pid[1], sub_pid[2],sub_pid[3],sub_pid[4])
+            elif sub_pid[-1] == 3:
+                brake,throttle = sub_pid[3],sub_pid[4]
+                sub_pid[1] -= 1
+                if sub_pid[1] == 0:
+                    self.current_pid = self.last_pid
+            else:
+                brake,throttle = 0,1
+                              
+        
         gear = max(1, int((current_speed - 2 * pitch) / 60))
-        if throttle == -1:
+        if throttle < -1:
             gear = -1
-
-        waypoint = self.waypoint_queue_region[0]
-        dist = self.agent.vehicle.transform.location.distance(waypoint.location)
-        if dist <= 10:
-            self.region += 1
-            self.waypoint_queue_region.pop(0)
-
-        # if keyboard.is_pressed("space"):
-        #      print(self.agent.vehicle.transform.record())
-
+        throttle = -throttle
         return VehicleControl(throttle=throttle, steering=steering, brake=brake, gear=gear)
 
     @staticmethod
@@ -136,6 +115,34 @@ class TurboPIDController(Controller):
                 break
         return np.array([k_p, k_d, k_i])
 
+
+# a = list of SectionalPid()
+# i = 0
+# if a[i].waypoint == current waypoint then current pid = a[i]  i += 1
+
+
+class SectionalPID:
+        
+    def __init__(self, file_path_str):
+        """
+        file_path_str format:
+        mode 1(sharp turn) : (waypoint number, max sharp error, current speed, wide, brake, throttle, mode)
+        mode 2(wide turn)  : (waypoint number, max wide error, current speed, wide, brake, throttle, mode)
+        mode 3(manual break)      : (waypoint nunmber, duration of brake, _ , wide, brake, throttle, mode)
+
+        
+        ... up to 5
+        """
+        lines = file_path_str.readlines()
+        self.array = [[-1 for _ in range(6)] for _ in range(5)]
+        #creates 5x5 numpy array
+        row = 0
+        for line in lines:
+            print(line.strip("() \n").split(","))
+            a,b,c,d,e = map(float, line.strip("() \n").split(","))
+            self.array[row] = [a,b,c,d,e]
+            row += 1
+            
 
 class LatPIDController(Controller):
     def __init__(self, agent, config: dict, steering_boundary: Tuple[float, float],
@@ -224,3 +231,5 @@ class LatPIDController(Controller):
             np.clip((k_p * error) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
         return lat_control, error, wide_error, sharp_error
+
+    
