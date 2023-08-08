@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 from ROAR.control_module.controller import Controller
-from ROAR.control_module.controls import controls_sequence, Control
 from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
 from ROAR.utilities_module.data_structures_models import Transform
 from ROAR.control_module.lat_pid_result import LatPIDResult
@@ -26,9 +25,10 @@ class TurboPIDController(Controller):
             steering_boundary=steering_boundary
         )
         self.logger = logging.getLogger(__name__)
-        self.current_waypoint_index = 0
-        self.control_sequence: List[Control] = controls_sequence.copy()
 
+    def init_controls(self):
+        from ROAR.control_module.controls import controls_sequence, Control
+        self.control_sequence: List[Control] = controls_sequence.copy()
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
@@ -42,10 +42,8 @@ class TurboPIDController(Controller):
 
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
-        self.current_waypoint_index += 1
-        print(f"waypoint: {self.current_waypoint_index}")
 
-        if self.control_sequence.__len__() > 1 and self.current_waypoint_index >= self.control_sequence[1].get_start_line():
+        if self.control_sequence.__len__() > 1 and self.control_sequence[1].is_arrived(self.agent.vehicle.transform):
             self.logger.debug(f"Changing control sequence to {self.control_sequence[0].__class__.__name__}")
             self.control_sequence.pop(0)
 

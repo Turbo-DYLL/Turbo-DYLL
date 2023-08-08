@@ -3,30 +3,37 @@ from pathlib import Path
 from ROAR.control_module.lat_pid_result import LatPIDResult
 from ROAR.utilities_module.data_structures_models import Transform, Location, Rotation
 from ROAR.utilities_module.vehicle_models import VehicleControl
+from ROAR.utilities_module.waypoints import waypoints
 
 
 class Control:
     def __init__(self, start_line: int):
-        self.__start_line = start_line
+        self._start_location = waypoints[start_line - 1].location
 
-    def get_start_line(self):
-        return self.__start_line
+    def get_start_location(self):
+        return self._start_location
+
+    def is_arrived(self, transform: Transform) -> bool:
+        return transform.location.distance(self._start_location) <= 10
 
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         raise NotImplementedError
 
 
+class BrakeControl(Control):
+    def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
+        return VehicleControl(throttle=-1, steering=lat_pid_result.steering, brake=1)
+
+    def is_arrived(self, transform: Transform) -> bool:
+        return transform.location.distance(self._start_location) <= 25
+
+
 class StraightControl(Control):
     def __init__(self, start_line: int):
         super().__init__(start_line)
-        self.location = Location.from_array([2107.3212890625, 117.31633758544922, 3417.138671875])
 
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
-        if transform.location.distance(self.location) <= 30:
-            print("slow down")
-            throttle = -1
-            brake = 1
-        elif lat_pid_result.sharp_error < 0.9 or current_speed <= 90:
+        if lat_pid_result.sharp_error < 0.9 or current_speed <= 90:
             throttle = 1
             brake = 0
         else:
@@ -88,5 +95,7 @@ class MountainControl(Control):
 
 controls_sequence = [
     StraightControl(0),
+    BrakeControl(1037),
+    StraightControl(1067),
     MountainControl(1367)
 ]

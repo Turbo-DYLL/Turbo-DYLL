@@ -2,6 +2,7 @@ from ROAR.planning_module.local_planner.local_planner import LocalPlanner
 from ROAR.utilities_module.data_structures_models import Transform
 from ROAR.utilities_module.vehicle_models import Vehicle, VehicleControl
 from ROAR.control_module.controller import Controller
+import ROAR.utilities_module.waypoints as waypoints
 from ROAR.planning_module.mission_planner.mission_planner import MissionPlanner
 from ROAR.planning_module.behavior_planner.behavior_planner import BehaviorPlanner
 
@@ -50,7 +51,7 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
 
     def set_mission_plan(self) -> None:
         """
-        Clears current waypoints, and reset mission plan from start
+        Clears current waypoints.py, and reset mission plan from start
         I am simply transferring the mission plan into my waypoint queue.
         Assuming that this current run will run all the way to the end
 
@@ -66,7 +67,7 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
 
         # set waypoint queue to current spawn location
         # 1. find closest waypoint
-        # 2. remove all waypoints prior to closest waypoint
+        # 2. remove all waypoints.py prior to closest waypoint
         # if self.spawn_point_id != 12:
         #     closest_waypoint = self.way_points_queue[0]
         #     for waypoint in self.way_points_queue:
@@ -76,6 +77,8 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         #             closest_waypoint = waypoint
         #     while self.way_points_queue[0] != closest_waypoint:
         #         self.way_points_queue.popleft()
+
+        waypoints.waypoints = self.way_points_queue.copy()
 
     def is_done(self) -> bool:
         """
@@ -105,6 +108,8 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
                 and len(self.way_points_queue) == 0
         ):
             return VehicleControl()
+
+        print(len(self.way_points_queue))
 
         # get vehicle's location
         vehicle_transform: Union[Transform, None] = self.agent.vehicle.transform
