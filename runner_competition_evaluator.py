@@ -67,7 +67,7 @@ def run(agent_class, agent_config_file_path: Path, carla_config_file_path: Path,
         print(f"something bad happened during initialization: {e}")
         carla_runner.on_finish()
         logging.error(f"{e}. Might be a good idea to restart Server")
-        return 0, 0, False
+        raise e
 
 
 def suppress_warnings():
