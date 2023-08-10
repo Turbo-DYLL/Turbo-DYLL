@@ -43,7 +43,7 @@ class TurboPIDController(Controller):
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
 
-        if self.control_sequence.__len__() > 1 and self.control_sequence[1].is_arrived(self.agent.vehicle.transform):
+        if self.control_sequence.__len__() > 1 and self.control_sequence[1].should_start(self.agent.vehicle.transform):
             self.logger.debug(f"Changing control sequence to {self.control_sequence[0].__class__.__name__}")
             self.control_sequence.pop(0)
 
