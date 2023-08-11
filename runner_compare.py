@@ -97,7 +97,7 @@ def main():
     suppress_warnings()
     agent_class_list = [TurboPIDAgent, PIDFastAgent]
     waypoint_path_list = [
-        Path("./ROAR/datasets/segment_waypoint_test/eric-waypoints-jump.txt"),
+        Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt"),
         Path("./ROAR/datasets/aaronWaypoint.txt"),
     ]
     end_point = Location(x=2428.841553, y=115.4767151, z=3736.436768)

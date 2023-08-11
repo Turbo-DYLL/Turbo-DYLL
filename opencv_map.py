@@ -126,7 +126,7 @@ class MapViewer:
 
 
 if __name__ == "__main__":
-    waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/eric-waypoints.txt")
+    waypoints_file = Path("./ROAR/datasets/segment_waypoint/eric-waypoints.txt")
     map_viewer = MapViewer(window_size=200)
     with open(waypoints_file, "r") as file:
         map_viewer.update(set_waypoint = file)
