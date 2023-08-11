@@ -149,3 +149,5 @@ misc/depth_nvidia_model_logs
 credential.json
 
 .DS_Store
+
+**/*.temp
