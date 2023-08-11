@@ -1,5 +1,5 @@
 from pathlib import Path
-from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
+from ROAR.agent_module.agent import Agent
 from ROAR.control_module.turbo_pid_controller import TurboPIDController
 from ROAR.planning_module.local_planner.turbo_waypoint_following_local_planner import TurboWaypointFollowingLocalPlanner
 from ROAR.planning_module.behavior_planner.behavior_planner import BehaviorPlanner
@@ -9,7 +9,7 @@ from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
 import logging
 
 
-class TurboPIDAgent(PIDFastAgent):
+class TurboPIDAgent(Agent):
     def __init__(self, target_speed=40, **kwargs):
         super().__init__(**kwargs)
         self.target_speed = target_speed
@@ -34,8 +34,7 @@ class TurboPIDAgent(PIDFastAgent):
 
     def run_step(self, vehicle: Vehicle,
                  sensors_data: SensorsData) -> VehicleControl:
-        super(PIDFastAgent, self).run_step(vehicle=vehicle,
-                                       sensors_data=sensors_data)
+        super().run_step(vehicle=vehicle, sensors_data=sensors_data)
         self.transform_history.append(self.vehicle.transform)
         # print(self.vehicle.transform, self.vehicle.velocity)
         if self.is_done:
