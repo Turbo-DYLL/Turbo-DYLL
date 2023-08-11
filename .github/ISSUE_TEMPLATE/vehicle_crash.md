@@ -1,0 +1,11 @@
+---
+name: Vehicle Crash
+about: Create a report to help vehicle improve
+title: ''
+labels: crash
+assignees: ''
+
+---
+
+**Crashed waypoint:**
+- e.g. (2542.809814453125,110.39226531982422,4069.600341796875,-0.1664123684167862,-1.1014362573623657,99.98390197753906)
