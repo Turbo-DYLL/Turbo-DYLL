@@ -109,7 +109,7 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         ):
             return VehicleControl()
 
-        print(len(self.way_points_queue))
+        print(len(waypoints.waypoints) - len(self.way_points_queue))
 
         # get vehicle's location
         vehicle_transform: Union[Transform, None] = self.agent.vehicle.transform
@@ -150,10 +150,10 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         waypoint_lookahead = round((pow(current_speed, 2) * 0.002 + 0.6 * current_speed) / 2)
         far_waypoint = self.way_points_queue[min(waypoint_lookahead, len(self.way_points_queue) - 1)]
         close_waypoint = self.way_points_queue[min(60, waypoint_lookahead, len(self.way_points_queue) - 1)]
-        print(f"close: {close_waypoint}")
-        print(f"far: {far_waypoint}")
-        print(f"target: {target_waypoint}")
-        print(f"ahead: {waypoint_lookahead}")
+        # print(f"close: {close_waypoint}")
+        # print(f"far: {far_waypoint}")
+        # print(f"target: {target_waypoint}")
+        # print(f"ahead: {waypoint_lookahead}")
 
         control: VehicleControl = self.controller.run_in_series(next_waypoint=target_waypoint,
                                                                 close_waypoint=close_waypoint,
