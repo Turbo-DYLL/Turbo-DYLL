@@ -1,5 +1,5 @@
 import carla
-
+from ROAR.utilities_module.data_structures_models import Location
 
 def convert_transform_from_str_to_list(str_transform: str):
     coordinates = str_transform.split(",")
@@ -42,3 +42,8 @@ def convert_transform_from_str_to_source(line):
     x, y, z, roll, pitch, yaw = convert_transform_from_str_to_list(line)
     return carla.Transform(convert_location_from_agent_to_source(x, y, z),
                            convert_rotation_from_agent_to_source(roll, pitch, yaw))
+
+
+def convert_location_from_str_to_agent(line):
+    x, y, z, roll, pitch, yaw = convert_transform_from_str_to_list(line)
+    return Location(x=x, y=y, z=z)

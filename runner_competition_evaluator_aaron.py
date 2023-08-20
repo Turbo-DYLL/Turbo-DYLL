@@ -47,6 +47,7 @@ def run(agent_class, agent_config_file_path: Path, carla_config_file_path: Path,
     """
 
     agent_config: AgentConfig = AgentConfig.parse_file(agent_config_file_path)
+    agent_config.waypoint_file_path = Path("./ROAR/datasets/aaronWaypoint.txt")
     carla_config = CarlaConfig.parse_file(carla_config_file_path)
 
     # hard code agent config such that it reflect competition requirements
@@ -81,7 +82,7 @@ def suppress_warnings():
 
 def main():
     suppress_warnings()
-    agent_class = TurboPIDAgent
+    agent_class = PIDFastAgent
     num_trials = 1
     total_score_array = []
     num_laps = 1

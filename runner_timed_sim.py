@@ -5,9 +5,11 @@ from ROAR.configurations.configuration import Configuration as AgentConfig
 from pathlib import Path
 from ROAR.agent_module.pure_pursuit_agent \
     import PurePursuitAgent
-from ROAR_Sim.carla_client.carla_runner import CarlaRunner
+from ROAR_Sim.carla_client.carla_runner_timer import CarlaRunner
 from typing import Tuple
 from prettytable import PrettyTable
+
+
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 
 # aaron import

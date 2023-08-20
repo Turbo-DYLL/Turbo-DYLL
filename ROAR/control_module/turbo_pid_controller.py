@@ -1,13 +1,14 @@
 from collections import deque
 import numpy as np
 import logging
-from typing import Tuple
+from typing import Tuple, List
 import json
 from pathlib import Path
 
 from ROAR.control_module.controller import Controller
 from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
-from ROAR.utilities_module.data_structures_models import Transform, Location, Rotation
+from ROAR.utilities_module.data_structures_models import Transform
+from ROAR.control_module.lat_pid_result import LatPIDResult
 
 
 class TurboPIDController(Controller):
@@ -15,112 +16,43 @@ class TurboPIDController(Controller):
                  throttle_boundary: Tuple[float, float], **kwargs):
         super().__init__(agent, **kwargs)
         self.max_speed = self.agent.agent_settings.max_speed
-        throttle_boundary = throttle_boundary
+        self.throttle_boundary = throttle_boundary
         self.steering_boundary = steering_boundary
         self.config = json.load(Path(agent.agent_settings.pid_config_file_path).open(mode='r'))
-
-        # useful variables
-        self.region = 1
-        self.brake_counter = 0
-
-        self.waypoint_queue_region = []
-        # region_list_path = Path("./ROAR/control_module/region_list.txt")
-        region_list_path = Path("./ROAR/datasets/control/region_list.txt")
-        # braking_list_path = Path("./ROAR/control_module/braking_list_mod.txt")
-        braking_list_path = Path("./ROAR/datasets/control/braking_list.txt")
-        with open(region_list_path) as f:
-            for line in f:
-                raw = line.split(",")
-                waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
-                                     rotation=Rotation(pitch=0, yaw=0, roll=0))
-                self.waypoint_queue_region.append(waypoint)
-
-        self.waypoint_queue_braking = []
-        with open(braking_list_path) as f:
-            for line in f:
-                raw = line.split(",")
-                waypoint = Transform(location=Location(x=raw[0], y=raw[1], z=raw[2]),
-                                     rotation=Rotation(pitch=0, yaw=0, roll=0))
-                self.waypoint_queue_braking.append(waypoint)
-
         self.lat_pid_controller = LatPIDController(
             agent=agent,
             config=self.config["latitudinal_controller"],
             steering_boundary=steering_boundary
         )
         self.logger = logging.getLogger(__name__)
-        self.location = Location.from_array([2107.3212890625,117.31633758544922,3417.138671875])
+
+    def init_controls(self):
+        from ROAR.control_module.controls import controls_sequence, Control
+        self.control_sequence: List[Control] = controls_sequence.copy()
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
 
         # run lat pid controller
-        steering, error, wide_error, sharp_error = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint,
-                                                                                         close_waypoint=close_waypoint,
-                                                                                         far_waypoint=far_waypoint)
-
-        print(next_waypoint.record())
+        lat_result = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint,
+                                                           close_waypoint=close_waypoint,
+                                                           far_waypoint=far_waypoint)
 
         current_speed = Vehicle.get_speed(self.agent.vehicle)
-
-        # get errors from lat pid
-        error = abs(round(error, 3))
-        wide_error = abs(round(wide_error, 3))
-        sharp_error = abs(round(sharp_error, 3))
-        # print(error, wide_error, sharp_error)
 
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
 
-        print(f"sharp: {sharp_error}, speed: {current_speed}")
-        if self.region == 1:
-            if self.agent.vehicle.transform.location.distance(self.location) <= 30:
-                print("slow down")
-                throttle = -1
-                brake = 1
-            elif sharp_error < 0.9 or current_speed <= 90:
-                throttle = 1
-                brake = 0
-            else:
-                throttle = -1
-                brake = 1
-        elif self.region == 2:
-            waypoint = self.waypoint_queue_braking[0]  # 5012 is weird bump spot
-            dist = self.agent.vehicle.transform.location.distance(waypoint.location)
-            if dist <= 5:
-                self.brake_counter = 1
-                # print(self.waypoint_queue_braking[0])
-                self.waypoint_queue_braking.pop(0)
-            if self.brake_counter > 0:
-                throttle = -1
-                brake = 1
-                self.brake_counter += 1
-                if self.brake_counter >= 8:
-                    self.brake_counter = 0
-            elif sharp_error >= 0.67 and current_speed > 70:
-                throttle = 0
-                brake = 0.4
-            elif wide_error > 0.09 and current_speed > 92:  # wide turn
-                throttle = max(0, 1 - 6 * pow(wide_error + current_speed * 0.003, 6))
-                brake = 0
-            else:
-                throttle = 1
-                brake = 0
+        if self.control_sequence.__len__() > 1 and self.control_sequence[1].should_start(self.agent.vehicle.transform):
+            self.logger.debug(f"Changing control sequence to {self.control_sequence[0].__class__.__name__}")
+            self.control_sequence.pop(0)
 
+        vehicle_control = self.control_sequence[0].apply_control(self.agent.vehicle.transform, lat_result, current_speed)
         gear = max(1, int((current_speed - 2 * pitch) / 60))
-        if throttle == -1:
+        if vehicle_control.throttle == -1:
             gear = -1
-
-        waypoint = self.waypoint_queue_region[0]
-        dist = self.agent.vehicle.transform.location.distance(waypoint.location)
-        if dist <= 10:
-            self.region += 1
-            self.waypoint_queue_region.pop(0)
-
-        # if keyboard.is_pressed("space"):
-        #      print(self.agent.vehicle.transform.record())
-
-        return VehicleControl(throttle=throttle, steering=steering, brake=brake, gear=gear)
+        vehicle_control.gear = gear
+        return vehicle_control
 
     @staticmethod
     def find_k_values(vehicle: Vehicle, config: dict) -> np.array:
@@ -144,7 +76,7 @@ class LatPIDController(Controller):
         self._dt = dt
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
-                      **kwargs) -> float:
+                      **kwargs) -> LatPIDResult:
         """
         Calculates a vector that represent where you are going.
         Args:
@@ -220,4 +152,4 @@ class LatPIDController(Controller):
         lat_control = float(
             np.clip((k_p * error) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
-        return lat_control, error, wide_error, sharp_error
+        return LatPIDResult(steering=lat_control, error=error, wide_error=wide_error, sharp_error=sharp_error)

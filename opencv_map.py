@@ -24,22 +24,26 @@ class MapViewer:
                     self.window_size -= int(flags/7864320 * 30) # <- prevents infinitely zoom that crashes the program
             # print(f"Mouse wheel scrolled: {scroll_amount}")
 
-    def update(self, set_waypoint, current_waypoint):
+    def update(self, set_waypoint = None, current_waypoint = None):
         """updates map with waypoint """
         self.main_map = np.load(self.file_path.__str__())
         self.main_map = self.main_map.astype(np.uint8)
         self.main_map = np.stack((self.main_map,) * 3, axis=-1) #converts it in to colored
 
         try:
-            set_waypoint_array = util.get_coords_from_str_lines(set_waypoint)
-            for coords in set_waypoint_array:
-                self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 36, 250) #<- blue lol
+            if set_waypoint != None:
+                set_waypoint_array = util.get_coords_from_str_lines(set_waypoint)
+                for coords in set_waypoint_array:
+                    self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 36, 250) #<- blue lol
+
+            if current_waypoint != None:
+                current_waypoint_array = util.get_coords_from_str_lines(current_waypoint)
+                for coords in current_waypoint_array:
+                    self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 250, 48) #<- green haha
         except ValueError:
             pass
 
-        current_waypoint_array = util.get_coords_from_str_lines(current_waypoint)
-        for coords in current_waypoint_array:
-            self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 250, 48) #<- green haha
+        
         # why the hell did bug fixxing this small section take me 2 hours - Leo 
         # (Coded with a boxful of monster and max volume dubstep)
 
@@ -121,7 +125,12 @@ class MapViewer:
                 return 3
 
 
-# if __name__ == "__main__":
-    # map_viewer = MapViewer(window_size=200)
-    # map_viewer.interactive_map([3000,3000])
-    # print(self.size)
+if __name__ == "__main__":
+    waypoints_file = Path("./ROAR/datasets/segment_waypoint/eric-waypoints.txt")
+    map_viewer = MapViewer(window_size=200)
+    with open(waypoints_file, "r") as file:
+        map_viewer.update(set_waypoint = file)
+    map_viewer.interactive_map([3000,3000])
+
+
+

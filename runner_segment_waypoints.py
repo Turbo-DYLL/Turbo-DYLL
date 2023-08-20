@@ -22,7 +22,7 @@ def main(args):
                                agent_settings=agent_config,
                                npc_agent_class=PurePursuitAgent)
     interactive_map_viewer = MapViewer()
-    waypoints_file = Path("./ROAR/datasets/segment_waypoint_test/main.txt")
+    waypoints_file = Path("./ROAR/datasets/segment_waypoint/main.txt")
 
     while True:
         try:
