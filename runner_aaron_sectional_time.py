@@ -101,8 +101,9 @@ def suppress_warnings():
 def main():
     suppress_warnings()
     output_path = Path("./ROAR/datasets/pid_comparison/aaron.csv")
-    my_waypoint_path = Path("./ROAR/datasets/aaronWaypoint.txt")
-    with open(my_waypoint_path, "r") as f:
+    aaron_waypoint_list = Path("./ROAR/datasets/aaronWaypoint.txt")
+    my_waypoint_list = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
+    with open(my_waypoint_list, "r") as f:
         lines = f.readlines()
 
     i = 0
@@ -117,7 +118,7 @@ def main():
 
     start_time, stop_time, time_list = run(agent_class=PIDFastAgent,
                                            waypoint_record_list=waypoint_record_list,
-                                           waypoint_path=my_waypoint_path,
+                                           waypoint_path=aaron_waypoint_list,
                                            agent_config_file_path=Path(
                                                "./ROAR/configurations/carla/carla_agent_configuration.json"),
                                            carla_config_file_path=Path("./ROAR_Sim/configurations/configuration.json"),
