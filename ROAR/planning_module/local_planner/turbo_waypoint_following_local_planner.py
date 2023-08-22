@@ -79,6 +79,8 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         #         self.way_points_queue.popleft()
 
         waypoints.waypoints = self.way_points_queue.copy()
+        self.way_points_length = len(self.way_points_queue)
+
 
     def is_done(self) -> bool:
         """
@@ -109,7 +111,7 @@ class TurboWaypointFollowingLocalPlanner(LocalPlanner):
         ):
             return VehicleControl()
 
-        print(len(waypoints.waypoints) - len(self.way_points_queue))
+        print(self.way_points_length - len(self.way_points_queue))
 
         # get vehicle's location
         vehicle_transform: Union[Transform, None] = self.agent.vehicle.transform
