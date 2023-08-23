@@ -1,6 +1,7 @@
 import logging
 import time
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Tuple, List
 
@@ -100,8 +101,21 @@ def suppress_warnings():
 
 def main():
     suppress_warnings()
-    output_path = Path("./ROAR/datasets/pid_comparison/aaron.csv")
-    aaron_waypoint_list = Path("./ROAR/datasets/aaronWaypoint.txt")
+
+    class Mode(Enum):
+        turbo_pid = 0
+        pid = 1
+
+    mode = Mode.turbo_pid
+    if mode == Mode.turbo_pid:
+        agent_class = TurboPIDAgent
+        output_path = Path("./ROAR/datasets/pid_comparison/turbo.csv")
+        waypoints_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
+    else:
+        agent_class = PIDFastAgent
+        output_path = Path("./ROAR/datasets/pid_comparison/pid.csv")
+        waypoints_path = Path("./ROAR/datasets/aaronWaypoint.txt")
+
     my_waypoint_list = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     with open(my_waypoint_list, "r") as f:
         lines = f.readlines()
@@ -116,9 +130,9 @@ def main():
     table = PrettyTable()
     table.field_names = ["agent_name", "time_elapsed (sec)", "num_collisions", "laps completed"]
 
-    start_time, stop_time, time_list = run(agent_class=PIDFastAgent,
+    start_time, stop_time, time_list = run(agent_class=agent_class,
                                            waypoint_record_list=waypoint_record_list,
-                                           waypoint_path=aaron_waypoint_list,
+                                           waypoint_path=waypoints_path,
                                            agent_config_file_path=Path(
                                                "./ROAR/configurations/carla/carla_agent_configuration.json"),
                                            carla_config_file_path=Path("./ROAR_Sim/configurations/configuration.json"),
