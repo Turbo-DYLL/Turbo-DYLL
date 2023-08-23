@@ -223,7 +223,7 @@ controls_sequence = [
     MountainControl2(3000),
     BrakeControl(3485),
     MountainControl2(3487),
-    MountainControl3(4000),
+    MountainControl3(3800),
     BrakeControl(4130),
     MountainControl3(4131),
     BrakeControl(4845),
