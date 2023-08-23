@@ -10,7 +10,7 @@ from misc.utils import str2bool
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR.agent_module.special_agents.segment_waypoint_generating_agent import WaypointGeneratingAgent
 from opencv_map import MapViewer
-import util
+import utils
 
 
 def main(args):
@@ -33,7 +33,7 @@ def main(args):
                 lines = file.readlines()
             spawn_point = None
             try:
-                spawn_point = util.convert_transform_from_str_to_source(lines[-1])
+                spawn_point = utils.convert_transform_from_str_to_source(lines[-1])
             except Exception:
                 pass
             print("spawn_point: ", spawn_point)
@@ -54,7 +54,7 @@ def main(args):
         interactive_map_viewer.update(waypoints, agent.waypoints_list)
 
         # 0: save, 1: discard, 2: save&quit 3: discard&quit
-        choice = interactive_map_viewer.interactive_map(util.get_coords_from_str(agent.waypoints_list[-1]))
+        choice = interactive_map_viewer.interactive_map(utils.get_coords_from_str(agent.waypoints_list[-1]))
         print(f"last waypoint: {agent.waypoints_list[-1]}")
 
         if choice % 2 == 0:

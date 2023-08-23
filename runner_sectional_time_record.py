@@ -1,5 +1,4 @@
 import logging
-import time
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -8,12 +7,10 @@ from typing import Tuple, List
 import numpy as np
 from prettytable import PrettyTable
 
-import util
 from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
 from ROAR.agent_module.aaron_wrapper_agent import ArronWrapperAgent
 from ROAR.agent_module.pure_pursuit_agent \
     import PurePursuitAgent
-from ROAR.agent_module.timer_wrapper_agent import TimerWrapperAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 from ROAR.utilities_module.data_structures_models import Location
@@ -123,7 +120,7 @@ def main():
     i = 0
     waypoint_record_list = []
     while i < len(lines):
-        waypoint_record_list.append(util.convert_location_from_str_to_agent(lines[i]))
+        waypoint_record_list.append(utils.convert_location_from_str_to_agent(lines[i]))
         i += 500
 
     num_laps = 1

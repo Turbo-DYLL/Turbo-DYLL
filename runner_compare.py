@@ -7,7 +7,7 @@ from typing import Tuple
 import numpy as np
 from prettytable import PrettyTable
 
-import util
+import utils
 from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
 from ROAR.agent_module.pure_pursuit_agent \
     import PurePursuitAgent
@@ -121,7 +121,7 @@ def main():
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     with open(my_waypoint_path, "r") as f:
         lines = f.readlines()
-        end_point = util.convert_location_from_str_to_agent(lines[end_line - 1])
+        end_point = utils.convert_location_from_str_to_agent(lines[end_line - 1])
 
     total_array = []
     num_laps = 1
