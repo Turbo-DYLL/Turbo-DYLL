@@ -28,7 +28,7 @@ class TurboPIDController(Controller):
 
     def init_controls(self):
         from ROAR.control_module.controls import controls_sequence, Control
-        self.control_sequence: List[Control] = controls_sequence.copy()
+        self.control_sequence: List[Control] = controls_sequence
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
