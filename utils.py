@@ -1,5 +1,7 @@
 import carla
-from ROAR.utilities_module.data_structures_models import Location
+import os
+from ROAR.utilities_module.data_structures_models import Location, Transform, Rotation
+
 
 def convert_transform_from_str_to_list(str_transform: str):
     coordinates = str_transform.split(",")
@@ -47,3 +49,22 @@ def convert_transform_from_str_to_source(line):
 def convert_location_from_str_to_agent(line):
     x, y, z, roll, pitch, yaw = convert_transform_from_str_to_list(line)
     return Location(x=x, y=y, z=z)
+
+
+def convert_transform_from_str_to_agent(line):
+    x, y, z, roll, pitch, yaw = convert_transform_from_str_to_list(line)
+    return Transform(location=Location(x=x, y=y, z=z),
+                     rotation=Rotation(roll=roll, pitch=pitch, yaw=yaw))
+
+
+def convert_transform_from_agent_to_source(transform: Transform) -> carla.Transform:
+    return carla.Transform(convert_location_from_agent_to_source(transform.location.x,
+                                                                 transform.location.y,
+                                                                 transform.location.z),
+                           convert_rotation_from_agent_to_source(transform.rotation.roll,
+                                                                 transform.rotation.pitch,
+                                                                 transform.rotation.yaw))
+
+
+def is_dev_mode():
+    return os.getenv("ROAR") == "DEV"
