@@ -1,11 +1,24 @@
+import utils
+from pathlib import Path
+
 from ROAR.control_module.lat_pid_result import LatPIDResult
 from ROAR.utilities_module.data_structures_models import Transform, Location, Rotation
 from ROAR.utilities_module.vehicle_models import VehicleControl
-from ROAR.utilities_module.waypoints import waypoints
+
+if not utils.is_dev_mode():
+    from ROAR.utilities_module.waypoints import waypoints
+else:
+    waypoints_path = Path(__file__).parent.parent / "datasets" / "segment_waypoint" / "eric-waypoints-jump.txt"
+    waypoints = []
+    with open(waypoints_path, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            waypoints.append(utils.convert_transform_from_str_to_agent(line))
 
 
 class Control:
     def __init__(self, start_line: int, start_within: float = 10):
+        self.start_line = start_line
         self._start_location = waypoints[start_line - 1].location
         self._start_within = start_within
 
