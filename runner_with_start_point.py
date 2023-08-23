@@ -130,7 +130,7 @@ def main():
     end_line = 4500
     is_record = False
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
-    temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/temp.txt")
+    temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/waypoints.temp")
     with open(my_waypoint_path, "r") as f:
         lines = f.readlines()
         end_location = utils.convert_location_from_str_to_agent(lines[end_line - 1])
