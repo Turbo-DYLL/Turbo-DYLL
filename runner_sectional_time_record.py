@@ -8,7 +8,7 @@ import numpy as np
 from prettytable import PrettyTable
 
 from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
-from ROAR.agent_module.aaron_wrapper_agent import ArronWrapperAgent
+from ROAR.agent_module.record_wrapper_agent import RecordWrapperAgent
 from ROAR.agent_module.pure_pursuit_agent \
     import PurePursuitAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
@@ -76,8 +76,8 @@ def run(agent_class,
                                lap_count=num_laps)
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = ArronWrapperAgent(agent_class, waypoint_record_list, carla_runner, vehicle=my_vehicle,
-                                  agent_settings=agent_config)
+        agent = RecordWrapperAgent(agent_class, waypoint_record_list, carla_runner, vehicle=my_vehicle,
+                                   agent_settings=agent_config)
         carla_runner.start_game_loop(agent=agent, use_manual_control=False)
         return carla_runner.start_simulation_time, carla_runner.end_simulation_time, agent.time_list
     except Exception as e:

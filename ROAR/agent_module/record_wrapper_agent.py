@@ -4,7 +4,7 @@ from ROAR.agent_module.agent import Agent
 from ROAR.utilities_module.data_structures_models import Location
 
 
-class ArronWrapperAgent(Agent):
+class RecordWrapperAgent(Agent):
     def __init__(self, agent_class, waypoint_record_list: List[Location], carla_runner, **kwargs):
         super().__init__(**kwargs)
         self.agent = agent_class(**kwargs)
