@@ -1,20 +1,22 @@
-from collections import deque
-import numpy as np
-import logging
-from typing import Tuple, List
 import json
+import logging
+from collections import deque
 from pathlib import Path
+from typing import Tuple
+
+import numpy as np
 
 from ROAR.control_module.controller import Controller
-from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
-from ROAR.utilities_module.data_structures_models import Transform
 from ROAR.control_module.lat_pid_result import LatPIDResult
+from ROAR.utilities_module.data_structures_models import Transform
+from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
 
 
 class TurboPIDController(Controller):
     def __init__(self, agent, steering_boundary: Tuple[float, float],
                  throttle_boundary: Tuple[float, float], **kwargs):
         super().__init__(agent, **kwargs)
+        self.control_sequence = None
         self.max_speed = self.agent.agent_settings.max_speed
         self.throttle_boundary = throttle_boundary
         self.steering_boundary = steering_boundary
@@ -26,9 +28,8 @@ class TurboPIDController(Controller):
         )
         self.logger = logging.getLogger(__name__)
 
-    def init_controls(self):
-        from ROAR.control_module.controls import controls_sequence, Control
-        self.control_sequence: List[Control] = controls_sequence
+    def set_control_sequence(self, control_sequence):
+        self.control_sequence = control_sequence
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
@@ -43,11 +44,13 @@ class TurboPIDController(Controller):
         # calculate change in pitch
         pitch = float(next_waypoint.record().split(",")[4])
 
-        if self.control_sequence.__len__() > 1 and self.control_sequence[1].should_start(self.agent.vehicle.transform):
-            self.logger.debug(f"Changing control sequence to {self.control_sequence[0].__class__.__name__}")
-            self.control_sequence.pop(0)
+        if self.control_sequence.should_start_next_control(self.agent.vehicle.transform):
+            self.logger.debug(f"Changing control sequence to {self.control_sequence.get_control_name()}")
+            self.control_sequence.next_control()
 
-        vehicle_control = self.control_sequence[0].apply_control(self.agent.vehicle.transform, lat_result, current_speed)
+        vehicle_control = self.control_sequence.get_current_control().get_control(self.agent.vehicle.transform,
+                                                                                  lat_result,
+                                                                                  current_speed)
         gear = max(1, int((current_speed - 2 * pitch) / 60))
         if vehicle_control.throttle == -1:
             gear = -1

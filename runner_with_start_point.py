@@ -82,11 +82,12 @@ def run(agent_class,
     try:
         my_vehicle = carla_runner.set_carla_world()
         agent = TimerWrapperAgent(agent_class, end_location, vehicle=my_vehicle, agent_settings=agent_config)
-        while controls.controls_sequence.__len__() > 1 and controls.controls_sequence[1].start_line <= start_line:
-            controls.controls_sequence.pop(0)
+        control_sequence = agent.agent.control_sequence
+        while control_sequence.__len__() > 1 and control_sequence[1].start_line <= start_line:
+            control_sequence.next_control()
             print("pop")
 
-        print(controls.controls_sequence.__len__().__str__() + " controls left")
+        print(control_sequence.__len__().__str__() + " controls left")
         carla_runner.world.player.set_transform(utils.convert_transform_from_agent_to_source(start_transform))
         carla_runner.start_game_loop(agent=agent, use_manual_control=False)
         print(compute_score(carla_runner)[1])
@@ -126,8 +127,8 @@ def main():
         agent_class_list.append(PIDFastAgent)
         waypoint_path_list.append(Path("./ROAR/datasets/aaronWaypoint.txt"))
 
-    start_line = 2000
-    end_line = 4500
+    start_line = 7800
+    end_line = 8500
     is_record = False
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/waypoints.temp")
