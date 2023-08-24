@@ -44,7 +44,7 @@ class StraightControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Straight Control: {transform.record()}")
         print(f"Straight Control: {lat_pid_result} {current_speed}")
-        if lat_pid_result.sharp_error < 0.9 or current_speed <= 110:
+        if lat_pid_result.sharp_error < 0.9 or current_speed <= 100:
             throttle = 1
             brake = 0
         else:
@@ -396,6 +396,8 @@ controls_sequence = [
     MountainControl3_5(4922),
     BrakeControl(5012),
     MountainControl3_5(5014),
+    BrakeControl(5560),
+    MountainControl4(5562),
     BrakeControl(5700),
     MountainControl4(5705),
     BrakeControl(5770),
@@ -429,5 +431,5 @@ controls_sequence = [
     MountainControl9(11910),
     BrakeControl(12172),
     RingControl(12185),
-    MountainControl9(12290),
+    StraightControl(12290),
 ]
