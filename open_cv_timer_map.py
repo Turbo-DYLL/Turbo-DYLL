@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from pathlib import Path
-import util
+import utils
 import time
 import math
 
@@ -50,7 +50,7 @@ class MapViewer:
 
         try:
             if set_waypoint != None:
-                set_waypoint_array = util.get_coords_from_str_lines(set_waypoint)
+                set_waypoint_array = utils.get_coords_from_str_lines(set_waypoint)
                 for coords in set_waypoint_array:
                     self.main_map[coords[1]-1:coords[1]+1, coords[0]-1:coords[0]+1] = (17, 36, 250) #<- blue lol
         except ValueError:

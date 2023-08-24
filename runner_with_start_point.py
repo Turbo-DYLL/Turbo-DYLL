@@ -1,3 +1,4 @@
+import csv
 import logging
 import time
 import warnings
@@ -14,11 +15,10 @@ from ROAR.agent_module.pure_pursuit_agent \
 from ROAR.agent_module.timer_wrapper_agent import TimerWrapperAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
-from ROAR.utilities_module.data_structures_models import Location
+from ROAR.control_module import controls
+from ROAR.utilities_module.data_structures_models import Location, Transform
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
-
-import csv
 
 
 # aaron import
@@ -44,7 +44,9 @@ def compute_score(carla_runner: CarlaRunner) -> Tuple[float, int, int]:
 
 
 def run(agent_class,
-        end_point: Location,
+        start_line: int,
+        start_transform: Transform,
+        end_location: Location,
         waypoint_path: Path,
         agent_config_file_path: Path,
         carla_config_file_path: Path,
@@ -54,7 +56,9 @@ def run(agent_class,
     Args:
         num_laps: int number of laps that the agent should run
         agent_class: the participant's agent
-        end_point: the end point of this comparison
+        start_line: the starting line
+        start_transform: the starting point of this comparison
+        end_location: the end point of this comparison
         waypoint_path: the path to the waypoints
         agent_config_file_path: agent configuration path
         carla_config_file_path: carla configuration path
@@ -77,7 +81,13 @@ def run(agent_class,
                                lap_count=num_laps)
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = TimerWrapperAgent(agent_class, end_point, vehicle=my_vehicle, agent_settings=agent_config)
+        agent = TimerWrapperAgent(agent_class, end_location, vehicle=my_vehicle, agent_settings=agent_config)
+        while controls.controls_sequence.__len__() > 1 and controls.controls_sequence[1].start_line <= start_line:
+            controls.controls_sequence.pop(0)
+            print("pop")
+
+        print(controls.controls_sequence.__len__().__str__() + " controls left")
+        carla_runner.world.player.set_transform(utils.convert_transform_from_agent_to_source(start_transform))
         carla_runner.start_game_loop(agent=agent, use_manual_control=False)
         print(compute_score(carla_runner)[1])
         return compute_score(carla_runner)
@@ -116,12 +126,19 @@ def main():
         agent_class_list.append(PIDFastAgent)
         waypoint_path_list.append(Path("./ROAR/datasets/aaronWaypoint.txt"))
 
-    end_line = 0
+    start_line = 2000
+    end_line = 4500
     is_record = False
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
+    temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/waypoints.temp")
     with open(my_waypoint_path, "r") as f:
         lines = f.readlines()
-        end_point = utils.convert_location_from_str_to_agent(lines[end_line - 1])
+        end_location = utils.convert_location_from_str_to_agent(lines[end_line - 1])
+
+    with open(temp_waypoint_path, "w") as f:
+        f.writelines(lines[start_line:])
+
+    start_transform = utils.convert_transform_from_str_to_agent(lines[start_line])
 
     total_array = []
     num_laps = 1
@@ -130,8 +147,10 @@ def main():
 
     for i in range(len(agent_class_list)):
         scores = run(agent_class=agent_class_list[i],
-                     end_point=end_point,
-                     waypoint_path=waypoint_path_list[i],
+                     start_line=start_line,
+                     start_transform=start_transform,
+                     end_location=end_location,
+                     waypoint_path=temp_waypoint_path,
                      agent_config_file_path=Path("./ROAR/configurations/carla/carla_agent_configuration.json"),
                      carla_config_file_path=Path("./ROAR_Sim/configurations/configuration.json"),
                      num_laps=num_laps)

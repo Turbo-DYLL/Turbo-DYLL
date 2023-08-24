@@ -1,18 +1,17 @@
 import logging
-import time
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Tuple, List
 
 import numpy as np
 from prettytable import PrettyTable
 
-import util
+import utils
 from ROAR.agent_module.aaron_pid_agent import PIDFastAgent
-from ROAR.agent_module.aaron_wrapper_agent import ArronWrapperAgent
+from ROAR.agent_module.record_wrapper_agent import RecordWrapperAgent
 from ROAR.agent_module.pure_pursuit_agent \
     import PurePursuitAgent
-from ROAR.agent_module.timer_wrapper_agent import TimerWrapperAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
 from ROAR.utilities_module.data_structures_models import Location
@@ -45,6 +44,7 @@ def compute_score(carla_runner: CarlaRunner) -> Tuple[float, int, int]:
 
 
 def run(agent_class,
+        end_location: Location,
         waypoint_record_list: List[Location],
         waypoint_path: Path,
         agent_config_file_path: Path,
@@ -55,7 +55,8 @@ def run(agent_class,
     Args:
         num_laps: int number of laps that the agent should run
         agent_class: the participant's agent
-        end_point: the end point of this comparison
+        end_location: the end point of this comparison
+        waypoint_record_list: the list of waypoints
         waypoint_path: the path to the waypoints
         agent_config_file_path: agent configuration path
         carla_config_file_path: carla configuration path
@@ -78,8 +79,8 @@ def run(agent_class,
                                lap_count=num_laps)
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = ArronWrapperAgent(agent_class, waypoint_record_list, carla_runner, vehicle=my_vehicle,
-                                  agent_settings=agent_config)
+        agent = RecordWrapperAgent(agent_class, end_location, waypoint_record_list, carla_runner, vehicle=my_vehicle,
+                                   agent_settings=agent_config)
         carla_runner.start_game_loop(agent=agent, use_manual_control=False)
         return carla_runner.start_simulation_time, carla_runner.end_simulation_time, agent.time_list
     except Exception as e:
@@ -100,8 +101,21 @@ def suppress_warnings():
 
 def main():
     suppress_warnings()
-    output_path = Path("./ROAR/datasets/pid_comparison/aaron.csv")
-    aaron_waypoint_list = Path("./ROAR/datasets/aaronWaypoint.txt")
+
+    class Mode(Enum):
+        turbo_pid = 0
+        pid = 1
+
+    mode = Mode.turbo_pid
+    if mode == Mode.turbo_pid:
+        agent_class = TurboPIDAgent
+        output_path = Path("./ROAR/datasets/pid_comparison/turbo.csv")
+        waypoints_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
+    else:
+        agent_class = PIDFastAgent
+        output_path = Path("./ROAR/datasets/pid_comparison/pid.csv")
+        waypoints_path = Path("./ROAR/datasets/aaronWaypoint.txt")
+
     my_waypoint_list = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     with open(my_waypoint_list, "r") as f:
         lines = f.readlines()
@@ -109,16 +123,24 @@ def main():
     i = 0
     waypoint_record_list = []
     while i < len(lines):
-        waypoint_record_list.append(util.convert_location_from_str_to_agent(lines[i]))
+        waypoint_record_list.append(utils.convert_location_from_str_to_agent(lines[i]))
         i += 500
+    waypoint_record_list.append(utils.convert_location_from_str_to_agent(lines[-1]))
+
+    end_line = None
+    if not end_line:
+        end_location = None
+    else:
+        end_location = utils.convert_location_from_str_to_agent(lines[end_line - 1])
 
     num_laps = 1
     table = PrettyTable()
     table.field_names = ["agent_name", "time_elapsed (sec)", "num_collisions", "laps completed"]
 
-    start_time, stop_time, time_list = run(agent_class=PIDFastAgent,
+    start_time, stop_time, time_list = run(agent_class=agent_class,
+                                           end_location=end_location,
                                            waypoint_record_list=waypoint_record_list,
-                                           waypoint_path=aaron_waypoint_list,
+                                           waypoint_path=waypoints_path,
                                            agent_config_file_path=Path(
                                                "./ROAR/configurations/carla/carla_agent_configuration.json"),
                                            carla_config_file_path=Path("./ROAR_Sim/configurations/configuration.json"),
@@ -128,8 +150,8 @@ def main():
         writer = csv.writer(csvfile)
         for i in range(len(time_list)):
             writer.writerow([i * 500, time_list[i] - start_time])
-
-        writer.writerow([len(lines), stop_time - start_time])
+        if len(lines) % 500 != 0:
+            writer.writerow([len(lines), stop_time - start_time])
 
 
 if __name__ == "__main__":
