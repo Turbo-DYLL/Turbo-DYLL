@@ -285,6 +285,32 @@ class MountainControl6(Control):
         return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
 
 
+class MountainControl7(Control):
+    def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
+        print(f"Mountain Control5: {transform.record()}")
+        print(f"Mountain Control5: {lat_pid_result} {current_speed}")
+        if lat_pid_result.sharp_error >= 0.67 and current_speed > 80:
+            throttle = 0
+            brake = 0.4
+
+            if lat_pid_result.sharp_error > 0.8:
+                brake = lat_pid_result.sharp_error / 2
+        elif current_speed > 90:  # wide turn
+            throttle = max(0, 1 - 6 * pow(lat_pid_result.wide_error * 0.7 + current_speed * 0.003, 7))
+            brake = 0
+            if lat_pid_result.wide_error > 0.2:
+                brake = lat_pid_result.wide_error / 2
+        else:
+            throttle = 1
+            brake = 0
+
+        if transform.rotation.pitch < -10 and current_speed > 90:
+            throttle = throttle * 0.9
+            brake = brake * 1.1
+
+        return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
+
+
 class RingControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Ring Control: {transform.record()}")
@@ -343,10 +369,14 @@ controls_sequence = [
     BrakeControl(8220),
     MountainControl6(8222),
     BrakeControl(8922),
-    MountainControl6(8925),
-    BrakeControl(9970),
-    MountainControl6(9973),
-    MountainControl(11000),
+    MountainControl7(8925),
+    BrakeControl(9125),
+    MountainControl7(9127),
+    BrakeControl(9725),
+    MountainControl7(9727),
+    # BrakeControl(9970),
+    # MountainControl7(9973),
+    MountainControl6(10000),
     BrakeControl(11025),
     MountainControl(11027),
     StraightControl(11265),
