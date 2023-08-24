@@ -44,12 +44,12 @@ class StraightControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Straight Control: {transform.record()}")
         print(f"Straight Control: {lat_pid_result} {current_speed}")
-        if lat_pid_result.sharp_error < 0.9 or current_speed <= 90:
+        if lat_pid_result.sharp_error < 0.9 or current_speed <= 110:
             throttle = 1
             brake = 0
         else:
             throttle = -1
-            brake = 1
+            brake = min(1, 0.4 * lat_pid_result.sharp_error)
 
         return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
 
@@ -311,6 +311,51 @@ class MountainControl7(Control):
         return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
 
 
+class MountainControl8(Control):
+    def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
+        print(f"Mountain Control: {transform.record()}")
+        print(f"Mountain Control: {lat_pid_result} {current_speed}")
+        if lat_pid_result.sharp_error >= 0.67 and current_speed > 120:
+            throttle = 0
+            brake = 0.4 + lat_pid_result.sharp_error / 2
+
+            if lat_pid_result.sharp_error > 1.2:
+                brake = 1
+
+        elif lat_pid_result.wide_error > 0.03 and current_speed > 95:  # wide turn
+            throttle = max(0, 1 - 6 * pow(lat_pid_result.wide_error + current_speed * 0.003, 7))
+            brake = 0
+        else:
+            throttle = 1
+            brake = 0
+
+        return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
+
+
+class MountainControl9(Control):
+    def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
+        print(f"Mountain Control: {transform.record()}")
+        print(f"Mountain Control: {lat_pid_result} {current_speed}")
+        if lat_pid_result.sharp_error >= 0.67 and current_speed > 120:
+            throttle = 0
+            brake = 0.5
+
+            if lat_pid_result.sharp_error > 0.8:
+                brake = lat_pid_result.sharp_error / 2
+
+            if lat_pid_result.sharp_error > 1.2:
+                brake = 1
+
+        elif lat_pid_result.wide_error > 0.3 and current_speed > 100:  # wide turn
+            throttle = max(0, 1 - 4 * pow(lat_pid_result.wide_error + current_speed * 0.003, 8))
+            brake = 0
+        else:
+            throttle = 1
+            brake = 0
+
+        return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
+
+
 class RingControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Ring Control: {transform.record()}")
@@ -320,7 +365,7 @@ class RingControl(Control):
             brake = lat_pid_result.sharp_error / 2
             if lat_pid_result.sharp_error > 0.8:
                 brake = lat_pid_result.sharp_error / 2
-        elif lat_pid_result.wide_error > 0.09 and current_speed > 70:  # wide turn
+        elif lat_pid_result.wide_error > 0.2 and current_speed > 70:  # wide turn
             throttle = max(0, 1 - 3 * pow(lat_pid_result.wide_error + current_speed * 0.003, 7))
             brake = 0
         else:
@@ -376,16 +421,13 @@ controls_sequence = [
     MountainControl7(9727),
     # BrakeControl(9970),
     # MountainControl7(9973),
-    MountainControl6(10000),
+    MountainControl8(10000),
+    MountainControl6(11000),
     BrakeControl(11025),
     MountainControl(11027),
     StraightControl(11265),
-    MountainControl(11910),
+    MountainControl9(11910),
     BrakeControl(12172),
     RingControl(12185),
-    MountainControl(12290),
-    # BrakeControl(12188),
-    # MountainControl(12190),
-    # BrakeControl(12240),
-    # MountainControl(12241),
+    MountainControl9(12290),
 ]
