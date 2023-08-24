@@ -127,8 +127,11 @@ def main():
         i += 500
     waypoint_record_list.append(utils.convert_location_from_str_to_agent(lines[-1]))
 
-    end_line = 0
-    end_location = utils.convert_location_from_str_to_agent(lines[end_line - 1])
+    end_line = None
+    if not end_line:
+        end_location = None
+    else:
+        end_location = utils.convert_location_from_str_to_agent(lines[end_line - 1])
 
     num_laps = 1
     table = PrettyTable()
