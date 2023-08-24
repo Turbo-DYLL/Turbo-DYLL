@@ -147,6 +147,8 @@ def main():
         writer = csv.writer(csvfile)
         for i in range(len(time_list)):
             writer.writerow([i * 500, time_list[i] - start_time])
+        if len(lines) % 500 != 0:
+            writer.writerow([len(lines), stop_time - start_time])
 
 
 if __name__ == "__main__":
