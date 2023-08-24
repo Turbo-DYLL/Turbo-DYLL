@@ -413,6 +413,8 @@ controls_sequence = [
     MountainControl2_5(7647),
     BrakeControl(7898),
     MountainControl2_6(7904),
+    BrakeControl(8070),
+    MountainControl2_6(8072),
     BrakeControl(8220),
     MountainControl6(8222),
     BrakeControl(8922),
