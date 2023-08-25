@@ -390,7 +390,7 @@ class RingControl(Control):
             if lat_pid_result.sharp_error > 0.8:
                 brake = brake * 1.1
         elif lat_pid_result.wide_error > 0.2 and current_speed > 80:  # wide turn
-            throttle = max(0, 1 - 5 * pow(lat_pid_result.wide_error + current_speed * 0.003, 7))
+            throttle = max(0, 1 - 5 * pow(lat_pid_result.wide_error * 1.1 + current_speed * 0.003, 6))
             brake = 0
         else:
             throttle = 1
