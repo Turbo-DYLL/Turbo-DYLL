@@ -15,7 +15,6 @@ from ROAR.agent_module.pure_pursuit_agent \
 from ROAR.agent_module.timer_wrapper_agent import TimerWrapperAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
-from ROAR.control_module import controls
 from ROAR.utilities_module.data_structures_models import Location, Transform
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
@@ -82,6 +81,7 @@ def run(agent_class,
     try:
         my_vehicle = carla_runner.set_carla_world()
         agent = TimerWrapperAgent(agent_class, end_location, vehicle=my_vehicle, agent_settings=agent_config)
+        from ROAR.control_module import controls
         while controls.controls_sequence.__len__() > 1 and controls.controls_sequence[1].start_line <= start_line:
             controls.controls_sequence.pop(0)
             print("pop")
@@ -126,8 +126,8 @@ def main():
         agent_class_list.append(PIDFastAgent)
         waypoint_path_list.append(Path("./ROAR/datasets/aaronWaypoint.txt"))
 
-    start_line = 2000
-    end_line = 4500
+    start_line = 11500
+    end_line = 12423
     is_record = False
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/waypoints.temp")

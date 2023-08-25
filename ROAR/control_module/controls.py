@@ -356,17 +356,41 @@ class MountainControl9(Control):
         return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
 
 
+class MountainControl10(Control):
+    def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
+        print(f"Mountain Control: {transform.record()}")
+        print(f"Mountain Control: {lat_pid_result} {current_speed}")
+        if lat_pid_result.sharp_error >= 0.5 and current_speed > 100:
+            throttle = 0
+            brake = 0.5
+
+            if lat_pid_result.sharp_error > 0.8:
+                brake = lat_pid_result.sharp_error / 2
+
+            if lat_pid_result.sharp_error > 1.2:
+                brake = 1
+
+        elif lat_pid_result.wide_error > 0.2 and current_speed > 90:  # wide turn
+            throttle = 0.4
+            brake = 0
+        else:
+            throttle = 1
+            brake = 0
+
+        return VehicleControl(throttle=throttle, steering=lat_pid_result.steering, brake=brake)
+
+
 class RingControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Ring Control: {transform.record()}")
         print(f"Ring Control: {lat_pid_result} {current_speed}")
         if lat_pid_result.sharp_error >= 0.5 and current_speed > 80:
             throttle = 0
-            brake = lat_pid_result.sharp_error / 2
+            brake = max(0.4, lat_pid_result.sharp_error / 2)
             if lat_pid_result.sharp_error > 0.8:
-                brake = lat_pid_result.sharp_error / 2
-        elif lat_pid_result.wide_error > 0.2 and current_speed > 70:  # wide turn
-            throttle = max(0, 1 - 3 * pow(lat_pid_result.wide_error + current_speed * 0.003, 7))
+                brake = brake * 1.1
+        elif lat_pid_result.wide_error > 0.2 and current_speed > 80:  # wide turn
+            throttle = max(0, 1 - 5 * pow(lat_pid_result.wide_error + current_speed * 0.003, 7))
             brake = 0
         else:
             throttle = 1
@@ -428,7 +452,7 @@ controls_sequence = [
     MountainControl8(10000),
     MountainControl6(11000),
     BrakeControl(11025),
-    MountainControl(11027),
+    MountainControl10(11027),
     StraightControl(11265),
     MountainControl9(11910),
     BrakeControl(12172),
