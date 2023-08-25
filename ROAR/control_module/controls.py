@@ -44,7 +44,7 @@ class StraightControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Straight Control: {transform.record()}")
         print(f"Straight Control: {lat_pid_result} {current_speed}")
-        if lat_pid_result.sharp_error < 0.9 or current_speed <= 100:
+        if lat_pid_result.sharp_error < 0.9 or current_speed <= 110:
             throttle = 1
             brake = 0
         else:
@@ -371,7 +371,7 @@ class MountainControl10(Control):
                 brake = 1
 
         elif lat_pid_result.wide_error > 0.2 and current_speed > 90:  # wide turn
-            throttle = 0.4
+            throttle = 0.4 + max(0, 1 - 6 * pow(lat_pid_result.wide_error + current_speed * 0.003, 8))
             brake = 0
         else:
             throttle = 1
@@ -384,13 +384,9 @@ class RingControl(Control):
     def apply_control(self, transform: Transform, lat_pid_result: LatPIDResult, current_speed: float) -> VehicleControl:
         print(f"Ring Control: {transform.record()}")
         print(f"Ring Control: {lat_pid_result} {current_speed}")
-        if lat_pid_result.sharp_error >= 0.5 and current_speed > 80:
-            throttle = 0
-            brake = max(0.4, lat_pid_result.sharp_error / 2)
-            if lat_pid_result.sharp_error > 0.8:
-                brake = brake * 1.1
-        elif lat_pid_result.wide_error > 0.2 and current_speed > 80:  # wide turn
-            throttle = max(0, 1 - 5 * pow(lat_pid_result.wide_error * 1.1 + current_speed * 0.003, 6))
+
+        if lat_pid_result.wide_error > 0.13 and current_speed > 100:  # wide turn
+            throttle = max(0, 1 - 6 * pow(lat_pid_result.wide_error + current_speed * 0.003, 6))
             brake = 0
         else:
             throttle = 1
@@ -409,17 +405,21 @@ controls_sequence = [
     BrakeControl(2230),
     MountainControl1(2232),
     MountainControl2(3000),
+    BrakeControl(3380),
+    MountainControl2(3382),
     BrakeControl(3485),
     MountainControl2(3487),
     MountainControl3(3800),
     BrakeControl(4130),
-    MountainControl3(4131),
+    MountainControl3(4133),
     BrakeControl(4845),
     MountainControl3(4847),
     BrakeControl(4920),
     MountainControl3_5(4922),
     BrakeControl(5012),
     MountainControl3_5(5014),
+    BrakeControl(5035),
+    MountainControl3_5(5037),
     BrakeControl(5560),
     MountainControl4(5562),
     BrakeControl(5700),
@@ -447,15 +447,17 @@ controls_sequence = [
     MountainControl7(9127),
     BrakeControl(9725),
     MountainControl7(9727),
-    # BrakeControl(9970),
-    # MountainControl7(9973),
     MountainControl8(10000),
     MountainControl6(11000),
     BrakeControl(11025),
     MountainControl10(11027),
+    BrakeControl(11205),
+    MountainControl10(11207),
     StraightControl(11265),
     MountainControl9(11910),
     BrakeControl(12172),
     RingControl(12185),
+    BrakeControl(12200),
+    RingControl(12203),
     StraightControl(12290),
 ]
