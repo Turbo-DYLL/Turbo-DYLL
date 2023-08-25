@@ -1,0 +1,3 @@
+time_elapsed: 500.55000745877624
+num_collisions: 0
+laps_completed: 1
