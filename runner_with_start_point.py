@@ -15,7 +15,6 @@ from ROAR.agent_module.pure_pursuit_agent \
 from ROAR.agent_module.timer_wrapper_agent import TimerWrapperAgent
 from ROAR.agent_module.turbo_pid_agent import TurboPIDAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
-from ROAR.control_module import controls
 from ROAR.utilities_module.data_structures_models import Location, Transform
 from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR_Sim.configurations.configuration import Configuration as CarlaConfig
@@ -82,6 +81,7 @@ def run(agent_class,
     try:
         my_vehicle = carla_runner.set_carla_world()
         agent = TimerWrapperAgent(agent_class, end_location, vehicle=my_vehicle, agent_settings=agent_config)
+        from ROAR.control_module import controls
         while controls.controls_sequence.__len__() > 1 and controls.controls_sequence[1].start_line <= start_line:
             controls.controls_sequence.pop(0)
             print("pop")
@@ -115,7 +115,6 @@ class TestMode:
 
 def main():
     suppress_warnings()
-    output_path = Path("./ROAR/datasets/pid_comparison/pid_comparison.csv")
     test_mode = TestMode.TURBO_ONLY
     agent_class_list = []
     waypoint_path_list = []
@@ -126,9 +125,8 @@ def main():
         agent_class_list.append(PIDFastAgent)
         waypoint_path_list.append(Path("./ROAR/datasets/aaronWaypoint.txt"))
 
-    start_line = 2000
-    end_line = 4500
-    is_record = False
+    start_line = 0
+    end_line = 12423
     my_waypoint_path = Path("./ROAR/datasets/segment_waypoint/eric-waypoints-jump.txt")
     temp_waypoint_path = Path("./ROAR/datasets/segment_waypoint/waypoints.temp")
     with open(my_waypoint_path, "r") as f:
@@ -156,14 +154,6 @@ def main():
                      num_laps=num_laps)
         total_array.append(scores)
         table.add_row([agent_class_list[i].__name__, scores[0], scores[1], scores[2]])
-    # table.add_row((f"AVG for {num_trials} trials = {np.average(total_score_array)}", "N/A", "N/A"))
-    if is_record:
-        t = time.ctime()
-        with open(output_path, "a") as f:
-            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            # writer.writerow(["time_start", "end_line_number", "agent_name", "time_elapsed (sec)", "num_collisions"])
-            for i in range(len(agent_class_list)):
-                writer.writerow([t, end_line, agent_class_list[i].__name__, total_array[i][0], total_array[i][1]])
 
     print(table)
 

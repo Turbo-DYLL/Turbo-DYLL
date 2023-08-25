@@ -5,6 +5,7 @@ from typing import Tuple, List
 import json
 from pathlib import Path
 
+import utils
 from ROAR.control_module.controller import Controller
 from ROAR.utilities_module.vehicle_models import VehicleControl, Vehicle
 from ROAR.utilities_module.data_structures_models import Transform
@@ -28,7 +29,10 @@ class TurboPIDController(Controller):
 
     def init_controls(self):
         from ROAR.control_module.controls import controls_sequence, Control
-        self.control_sequence: List[Control] = controls_sequence
+        if utils.is_dev_mode():
+            self.control_sequence: List[Control] = controls_sequence
+        else:
+            self.control_sequence: List[Control] = controls_sequence.copy()
 
     def run_in_series(self, next_waypoint: Transform, close_waypoint: Transform, far_waypoint: Transform,
                       **kwargs) -> VehicleControl:
